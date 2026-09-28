@@ -59,9 +59,7 @@ def parse_output(output_ids: list, tokenizer: AutoTokenizer) -> tuple:
         index = len(output_ids) - output_ids[::-1].index(151668)
     except ValueError:
         index = 0
-    thinking_content = tokenizer.decode(output_ids[:index], skip_special_tokens=True).strip(
-        "\n"
-    )
+    thinking_content = tokenizer.decode(output_ids[:index], skip_special_tokens=True).strip("\n")
     content = tokenizer.decode(output_ids[index:], skip_special_tokens=True).strip("\n")
     return thinking_content, content
 
