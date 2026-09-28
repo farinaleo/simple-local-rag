@@ -1,12 +1,18 @@
 import glob
 import os
 
-import chromadb
 from dotenv import load_dotenv
-from sentence_transformers import SentenceTransformer
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 load_dotenv()  # reads .env if present; real env vars take precedence
+
+# The Hugging Face cache location must be set BEFORE importing transformers
+# and sentence-transformers: huggingface_hub resolves HF_HOME once, at import
+# time. Configure it in .env (HF_HOME) to reuse an existing local cache.
+os.environ.setdefault("HF_HOME", os.path.expanduser("~/.cache/huggingface"))
+
+import chromadb  # noqa: E402
+from sentence_transformers import SentenceTransformer  # noqa: E402
+from transformers import AutoModelForCausalLM, AutoTokenizer  # noqa: E402
 
 # --- Configuration (see .env.example) --------------------------------------
 MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen3-0.6B")

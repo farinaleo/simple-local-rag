@@ -15,6 +15,9 @@ services:
     environment:
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
+      # The container always uses the models baked into the image at build
+      # time — a HF_HOME set in .env (for local runs) must not override it.
+      - HF_HOME=/opt/hf_cache
     stdin_open: true
     tty: true
     # GPU (requires nvidia-container-toolkit; also switch the Dockerfile to a CUDA torch index):

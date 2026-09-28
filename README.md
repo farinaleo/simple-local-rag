@@ -198,6 +198,7 @@ docker build --secret HF_TOKEN=hf_xxxx src/rag-management
 | Variable | Default | Description |
 |---|---|---|
 | `HF_TOKEN` | — | HF token (public models: not needed) |
+| `HF_HOME` | `~/.cache/huggingface` | HF cache location — absolute path (local runs) |
 | `MODEL_NAME` | `Qwen/Qwen3-0.6B` | Generation model |
 | `EMBED_NAME` | `Qwen/Qwen3-Embedding-0.6B` | Embedding model |
 | `DOCS_DIR` | `docs` | Knowledge base folder |
