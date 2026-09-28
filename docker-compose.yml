@@ -1,0 +1,31 @@
+services:
+  rag:
+    # Central orchestration: each service's build context points to its module,
+    # so module-specific needs (Dockerfile, deps) stay colocated with the logic.
+    build:
+      context: src/rag-management
+      # For gated models, uncomment:
+      # secrets:
+      #   - hf_token
+    container_name: rag-qwen
+    env_file: src/rag-management/.env
+    volumes:
+      - ./src/rag-management/chroma_db:/app/chroma_db   # persistent vector index
+      - ./src/rag-management/docs:/app/docs             # editable documents, no rebuild
+    environment:
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+    stdin_open: true
+    tty: true
+    # GPU (requires nvidia-container-toolkit; also switch the Dockerfile to a CUDA torch index):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+# secrets:
+#   hf_token:
+#     environment: HF_TOKEN

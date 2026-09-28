@@ -122,23 +122,32 @@ flowchart TB
 
 ```mermaid
 flowchart TD
-    ROOT["📁 simple-local-rag/"] --> META["📝 README · CHANGELOG<br/>CONTRIBUTING · .gitignore"]
+    ROOT["📁 simple-local-rag/"] --> ORCH["🐳 docker-compose.yml<br/><b>central orchestration</b>"]
+    ROOT --> META["📝 README · CHANGELOG<br/>CONTRIBUTING · .gitignore"]
+    ROOT --> CI["👷 .github/workflows/ci.yml"]
     ROOT --> SRC["📁 src/"]
     SRC --> RM["📁 rag-management/"]
     RM --> CORE["🦙 rag.py<br/>full RAG pipeline"]
-    RM --> UVCFG["⚙️ pyproject.toml<br/>.python-version · .env.example"]
-    RM --> DOCKER["🐳 Dockerfile<br/>docker-compose.yml · .dockerignore"]
+    RM --> UVCFG["⚙️ pyproject.toml · ruff.toml<br/>.python-version · .env.example"]
+    RM --> DOCKER["🐳 Dockerfile · .dockerignore<br/><i>module-specific needs</i>"]
     RM --> DATA["📂 docs/<br/>knowledge base"]
 
     classDef root fill:#ede7f6,stroke:#5e35b1,stroke-width:2px
+    classDef orch fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
     classDef pkg fill:#e8eaf6,stroke:#3949ab,stroke-width:2px
     classDef core fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
     class ROOT root
+    class ORCH orch
     class RM,DATA pkg
     class CORE,DOCKER,UVCFG core
 ```
 
-All RAG logic (Python, uv config, Docker) lives in `src/rag-management/`.
+**Design principle:** each module in `src/` owns its `Dockerfile` and config
+(specific needs colocated with the business logic), while the root
+`docker-compose.yml` orchestrates **all** services in one place — ready to
+add more modules later.
+
+All RAG logic (Python, uv config, Docker image) lives in `src/rag-management/`.
 
 ---
 
@@ -159,26 +168,32 @@ uv sync && uv run rag.py
 Drop your `.txt` files in `src/rag-management/docs/` — the index persists in
 `chroma_db/` and only new chunks are indexed on subsequent runs.
 
-### 🐳 Docker
+### 🐳 Docker (from the repository root)
 
 ```bash
-cd src/rag-management
-cp .env.example .env
+cp src/rag-management/.env.example src/rag-management/.env
 docker compose build              # ~15 min first time (models baked into the image)
 docker compose up -d
 docker compose exec rag uv run rag.py
 ```
 
+The root compose file points each service at its module's build context —
+adding a future service (API, UI, another RAG module…) is just a new entry.
+
+> 🔌 The image sets `HF_HUB_OFFLINE=1` and ships both models, so once built it
+> runs with no internet access. Test it: `docker compose down`, disconnect
+> the network, `docker compose up` — it still answers.
+
 <details>
 <summary><b>🔐 Gated models?</b> Pass the token without leaking it</summary>
 
 ```bash
-docker build --secret HF_TOKEN=hf_xxxx .
+docker build --secret HF_TOKEN=hf_xxxx src/rag-management
 ```
 </details>
 
 <details>
-<summary><b>⚙️ Configuration reference</b> (all in <code>.env</code>)</summary>
+<summary><b>⚙️ Configuration reference</b> (all in <code>src/rag-management/.env</code>)</summary>
 
 | Variable | Default | Description |
 |---|---|---|
