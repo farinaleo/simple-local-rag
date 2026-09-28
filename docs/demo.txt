@@ -1,5 +1,0 @@
-Project Apollo uses Python 3.11 and FastAPI for the backend services.
-The deployment pipeline for staging is triggered automatically via GitHub Actions.
-Database migrations are managed using Alembic. Never run raw DDL in production.
-To reset the local Redis cache, run 'redis-cli flushall' in your terminal.
-The API rate limit is 100 requests per minute per API key.
