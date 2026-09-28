@@ -1,0 +1,32 @@
+# Run from the repo root:
+#   docker compose -f src/rag-management/docker-compose.yml up -d
+services:
+  rag:
+    build:
+      context: ../..
+      dockerfile: src/rag-management/Dockerfile
+      # For gated models, uncomment:
+      # secrets:
+      #   - hf_token
+    container_name: rag-qwen
+    env_file: .env
+    volumes:
+      - ./chroma_db:/app/src/rag-management/chroma_db   # persistent vector index
+      - ./docs:/app/src/rag-management/docs             # editable documents, no rebuild needed
+    environment:
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+    stdin_open: true
+    tty: true
+    # GPU (requires nvidia-container-toolkit; also switch the Dockerfile to a CUDA torch index):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+# secrets:
+#   hf_token:
+#     environment: HF_TOKEN
