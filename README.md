@@ -101,7 +101,7 @@ flowchart TB
         DOCS[/"📂 docs/ volume"/]
     end
 
-    HF["☁️ Hugging Face Hub<br/>build time only"] ==>"weights baked in"==> CONTAINER
+    HF["☁️ Hugging Face Hub<br/>build time only"] ==>|"weights baked in"| CONTAINER
     CACHE -.->|"local runs"| RUNTIME
     ENV --> APP
     DOCS --> APP
