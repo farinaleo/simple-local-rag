@@ -4,7 +4,7 @@
 
 ## Added
 
-- 📝(docs) add AI agents branch and pull request policy #3
+- 📝(docs) add mermaid diagrams for architecture and structure #4
 
 ## Changed
 
