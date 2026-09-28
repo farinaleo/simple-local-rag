@@ -1,14 +1,50 @@
-# simple-local-rag
+<div align="center">
 
-A fully local, offline-capable RAG pipeline built on:
+# 🦙 simple-local-rag
 
-- **Qwen3-0.6B** — generation (chat, thinking-capable)
-- **Qwen3-Embedding-0.6B** — retrieval embeddings
-- **ChromaDB** — persistent vector store (no external DB server)
-- **uv** — fast Python project & dependency management
-- **Docker** — self-contained image with both models baked in
+**A fully local, offline-capable RAG pipeline — your data never leaves your machine.**
 
-## Architecture Overview
+[![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![uv](https://img.shields.io/badge/uv-managed-de5f00?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![offline](https://img.shields.io/badge/mode-100%25%20offline-2ea44f)](#)
+
+</div>
+
+---
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🧠 Stack
+
+| Layer | Tech |
+|---|---|
+| Generation | **Qwen3-0.6B** |
+| Embeddings | **Qwen3-Embedding-0.6B** |
+| Vector store | **ChromaDB** |
+| Packaging | **uv** |
+| Runtime | **Docker** |
+
+</td>
+<td width="50%" valign="top">
+
+### ✨ Highlights
+
+- 🔒 **Fully offline** after first build
+- 💾 **Persistent index** — incremental ingestion
+- ⚙️ **Config-driven** via `.env`
+- 📦 **Self-contained** Docker image
+- ♻️ **Simple by design** — no external services
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🏗️ Architecture
 
 ### End-to-end RAG flow
 
@@ -17,145 +53,160 @@ From document ingestion to the final answer, everything runs locally:
 ```mermaid
 flowchart LR
     subgraph INGEST["📄 Ingestion (once, then incremental)"]
-        A["docs/*.txt<br/>(knowledge base)"] --> B["chunk_text()<br/>500 chars, 50 overlap"]
-        B --> C["Qwen3-Embedding-0.6B<br/>(encode chunks)"]
-        C --> D[("ChromaDB<br/>chroma_db/<br/>persistent index")]
+        direction LR
+        A[/"docs/*.txt"/] --> B["✂️ chunk_text<br/>500 chars · 50 overlap"]
+        B --> C["🧮 Qwen3-Embedding<br/>encode chunks"]
+        C --> D[("🗄️ ChromaDB<br/>persistent index")]
     end
 
     subgraph QUERY["🔍 Retrieval (per question)"]
-        Q["User question"] --> E["Qwen3-Embedding-0.6B<br/>(encode query)"]
-        E --> F["Cosine similarity<br/>top-k = 3 chunks"]
-        D -.-> F
+        direction LR
+        Q[/"💬 User question"/] --> E["🧮 Qwen3-Embedding<br/>encode query"]
+        E --> F["📏 cosine similarity<br/>top-k = 3"]
     end
 
     subgraph GEN["🧠 Generation (per question)"]
-        F --> G["build_rag_message()<br/>context + question"]
-        G --> H["Qwen3-0.6B<br/>(chat template)"]
-        H --> I["parse_output()<br/>thinking / content"]
-        I --> ANS["✅ Grounded answer"]
+        direction LR
+        G["📋 context + question"] --> H["🦙 Qwen3-0.6B"]
+        H --> I["✅ Grounded answer"]
     end
 
-    style D fill:#e1f5fe
-    style H fill:#fff3e0
-    style ANS fill:#e8f5e9
+    D -."lookup".-> F
+    F ==> G
+
+    classDef store fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    classDef model fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef done fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    class D store
+    class C,E,H model
+    class I done
 ```
 
 ### Storage & runtime model
 
 ```mermaid
 flowchart TB
-    subgraph HOST["🖥️ Host machine"]
-        CACHE["~/.cache/huggingface<br/>(model weights, ~2 GB)"]
-        ENV[".env<br/>models, paths, HF_TOKEN"]
-        subgraph RUNTIME["Runtime (RAM / VRAM)"]
-            LLM["Qwen3-0.6B<br/>generator"]
-            EMB["Qwen3-Embedding-0.6B<br/>embedder"]
+    subgraph HOST["🖥️ Host"]
+        CACHE[("💾 HF cache<br/>~/.cache/huggingface")]
+        ENV["⚙️ .env<br/>models · paths · HF_TOKEN"]
+        subgraph RUNTIME["⚡ Runtime (RAM / VRAM)"]
+            LLM["🦙 Qwen3-0.6B<br/>generator"]
+            EMB["🧮 Embedder"]
         end
     end
 
-    subgraph CONTAINER["🐳 Docker container (optional)"]
-        APP["rag.py"]
-        VDB[("ChromaDB<br/>volume: chroma_db/")]
-        DOCS["docs/ volume<br/>(editable)"]
+    subgraph CONTAINER["🐳 Container (optional)"]
+        APP["📦 rag.py"]
+        VDB[("🗄️ ChromaDB<br/>volume")]
+        DOCS[/"📂 docs/ volume"/]
     end
 
-    HF["Hugging Face Hub<br/>(only at build time)"] -->|"weights baked into image"| CONTAINER
+    HF["☁️ Hugging Face Hub<br/>build time only"] ==>"weights baked in"==> CONTAINER
     CACHE -.->|"local runs"| RUNTIME
     ENV --> APP
     DOCS --> APP
-    APP --> EMB
     APP --> LLM
+    APP --> EMB
     APP --> VDB
 
-    style HF fill:#ffebee
-    style VDB fill:#e1f5fe
+    classDef cloud fill:#ffebee,stroke:#c62828,stroke-width:2px
+    classDef vol fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    class HF cloud
+    class VDB,DOCS vol
 ```
 
-Once the image is built (or models cached), the pipeline is **fully offline**:
-`HF_HUB_OFFLINE=1` blocks any call to the Hub at runtime.
+> 🔌 Once built, `HF_HUB_OFFLINE=1` blocks every call to the Hub — the
+> pipeline works with the network cable unplugged.
 
-## Project Structure
+### Project structure
 
 ```mermaid
 flowchart TD
-    ROOT["simple-local-rag/"] --> R["README.md"]
-    ROOT --> C["CHANGELOG.md"]
-    ROOT --> CT["CONTRIBUTING.md"]
-    ROOT --> GI[".gitignore"]
-    ROOT --> SRC["src/"]
-    SRC --> RM["rag-management/"]
-    RM --> RAG["rag.py<br/>full RAG pipeline"]
-    RM --> PY["pyproject.toml<br/>uv project & deps"]
-    RM --> PV[".python-version"]
-    RM --> ENVX[".env.example<br/>config template"]
-    RM --> DK["Dockerfile"]
-    RM --> DC["docker-compose.yml"]
-    RM --> DOCS["docs/"]
-    DOCS --> DEMO["demo.txt<br/>(sample knowledge base)"]
-    RM --> IG[".dockerignore"]
+    ROOT["📁 simple-local-rag/"] --> META["📝 README · CHANGELOG<br/>CONTRIBUTING · .gitignore"]
+    ROOT --> SRC["📁 src/"]
+    SRC --> RM["📁 rag-management/"]
+    RM --> CORE["🦙 rag.py<br/>full RAG pipeline"]
+    RM --> UVCFG["⚙️ pyproject.toml<br/>.python-version · .env.example"]
+    RM --> DOCKER["🐳 Dockerfile<br/>docker-compose.yml · .dockerignore"]
+    RM --> DATA["📂 docs/<br/>knowledge base"]
 
-    style ROOT fill:#ede7f6
-    style RM fill:#e8eaf6
-    style RAG fill:#fff3e0
+    classDef root fill:#ede7f6,stroke:#5e35b1,stroke-width:2px
+    classDef pkg fill:#e8eaf6,stroke:#3949ab,stroke-width:2px
+    classDef core fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    class ROOT root
+    class RM,DATA pkg
+    class CORE,DOCKER,UVCFG core
 ```
 
 All RAG logic (Python, uv config, Docker) lives in `src/rag-management/`.
 
-## Quick start (local, with uv)
+---
+
+## 🚀 Getting started
 
 ```bash
-# 1. Install uv (https://docs.astral.sh/uv/)
+# 1 — Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2. Configure
+# 2 — Configure
 cd src/rag-management
-cp .env.example .env        # then edit .env (HF_TOKEN only needed for gated models)
+cp .env.example .env      # HF_TOKEN only needed for gated models
 
-# 3. Install dependencies and run (uv creates .venv automatically)
-uv sync
-uv run rag.py
+# 3 — Run (uv creates .venv automatically)
+uv sync && uv run rag.py
 ```
 
-Put your documents as `.txt` files in `src/rag-management/docs/`. The vector
-index persists in `src/rag-management/chroma_db/` and only new chunks are
-indexed on subsequent runs.
+Drop your `.txt` files in `src/rag-management/docs/` — the index persists in
+`chroma_db/` and only new chunks are indexed on subsequent runs.
 
-## Docker
+### 🐳 Docker
 
 ```bash
 cd src/rag-management
 cp .env.example .env
-docker compose build          # ~15 min the first time (downloads models into the image)
+docker compose build              # ~15 min first time (models baked into the image)
 docker compose up -d
 docker compose exec rag uv run rag.py
 ```
 
-The image sets `HF_HUB_OFFLINE=1` and ships both models, so once built it runs
-with no internet access. Test it: `docker compose down`, disconnect the
-network, `docker compose up` — it still answers.
-
-For gated models, pass your token at build time without leaking it:
+<details>
+<summary><b>🔐 Gated models?</b> Pass the token without leaking it</summary>
 
 ```bash
 docker build --secret HF_TOKEN=hf_xxxx .
 ```
+</details>
 
-## Configuration
+<details>
+<summary><b>⚙️ Configuration reference</b> (all in <code>.env</code>)</summary>
 
-All settings live in `src/rag-management/.env` (see `.env.example`): model
-names, paths, `TOP_K`, `CHUNK_SIZE`, `MAX_NEW_TOKENS`, `ENABLE_THINKING`,
-and `HF_TOKEN`. Real environment variables override `.env` values.
+| Variable | Default | Description |
+|---|---|---|
+| `HF_TOKEN` | — | HF token (public models: not needed) |
+| `MODEL_NAME` | `Qwen/Qwen3-0.6B` | Generation model |
+| `EMBED_NAME` | `Qwen/Qwen3-Embedding-0.6B` | Embedding model |
+| `DOCS_DIR` | `docs` | Knowledge base folder |
+| `CHROMA_PATH` | `chroma_db` | Persistent index path |
+| `TOP_K` | `3` | Chunks retrieved per query |
+| `CHUNK_SIZE` / `CHUNK_OVERLAP` | `500` / `50` | Chunking params |
+| `MAX_NEW_TOKENS` | `512` | Generation budget |
+| `ENABLE_THINKING` | `false` | Qwen3 thinking mode |
 
-## Notes
+Real environment variables override `.env` values.
+</details>
 
-- `ENABLE_THINKING=false` and `MAX_NEW_TOKENS=512` are set for fast grounded
-  QA; flip them for reasoning-heavy use cases.
-- The pyproject pins CPU torch via uv's `pytorch-cpu` index — swap for a CUDA
-  index if you build with a GPU.
-- Swap ChromaDB for Qdrant if you later need multi-user serving or heavy
-  metadata filtering.
+---
 
-## Contributing
+## 📝 Notes
+
+- `ENABLE_THINKING=false` + `MAX_NEW_TOKENS=512` = fast grounded QA; flip
+  both for reasoning-heavy use cases.
+- The pyproject pins **CPU torch** via uv's `pytorch-cpu` index — swap for a
+  CUDA index when building with a GPU.
+- Need multi-user serving or heavy metadata filtering? Swap ChromaDB for
+  **Qdrant**.
+
+## 🤝 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) — commit format (gitmoji), changelog
 rules, PR checklist, and the **AI agents policy** (branches + pull requests
