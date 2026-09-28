@@ -1,0 +1,20 @@
+services:
+  rag:
+    build: .
+    container_name: rag-qwen
+    volumes:
+      - ./chroma_db:/app/chroma_db   # persistent vector index
+      - ./docs:/app/docs             # editable documents, no rebuild needed
+    environment:
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+    stdin_open: true
+    tty: true
+    # GPU (requires nvidia-container-toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
