@@ -1,9 +1,10 @@
 # Ruff configuration — enforced by CI (ruff check + ruff format)
-[tool.ruff]
+# NOTE: in a dedicated ruff.toml, keys are top-level (no [tool.ruff] prefix).
+
 line-length = 100
 target-version = "py311"
 
-[tool.ruff.lint]
+[lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -13,5 +14,5 @@ select = [
     "UP",  # pyupgrade (modern syntax)
 ]
 
-[tool.ruff.lint.isort]
+[lint.isort]
 known-first-party = ["rag"]
