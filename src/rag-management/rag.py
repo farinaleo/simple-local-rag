@@ -1,9 +1,10 @@
-import os
 import glob
+import os
+
 import chromadb
 from dotenv import load_dotenv
-from transformers import AutoModelForCausalLM, AutoTokenizer
 from sentence_transformers import SentenceTransformer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 load_dotenv()  # reads .env if present; real env vars take precedence
 
@@ -24,12 +25,13 @@ CHUNK_OVERLAP = int(os.environ.get("CHUNK_OVERLAP", "50"))
 # Generation model (Qwen3)
 # ---------------------------------------------------------------------------
 
+
 def initialize_model(model_name: str) -> tuple:
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype="auto",
-        device_map="auto"
+        device_map="auto",
     )
     return tokenizer, model
 
@@ -39,7 +41,7 @@ def produce_model_input(messages: list, tokenizer: AutoTokenizer, model) -> dict
         messages,
         tokenize=False,
         add_generation_prompt=True,
-        enable_thinking=ENABLE_THINKING  # False = faster grounded QA
+        enable_thinking=ENABLE_THINKING,  # False = faster grounded QA
     )
     return tokenizer([text], return_tensors="pt").to(model.device)
 
@@ -47,9 +49,9 @@ def produce_model_input(messages: list, tokenizer: AutoTokenizer, model) -> dict
 def text_completion(model_inputs: dict, model) -> list:
     generated_ids = model.generate(
         **model_inputs,
-        max_new_tokens=MAX_NEW_TOKENS
+        max_new_tokens=MAX_NEW_TOKENS,
     )
-    return generated_ids[0][len(model_inputs.input_ids[0]):].tolist()
+    return generated_ids[0][len(model_inputs.input_ids[0]) :].tolist()
 
 
 def parse_output(output_ids: list, tokenizer: AutoTokenizer) -> tuple:
@@ -57,7 +59,9 @@ def parse_output(output_ids: list, tokenizer: AutoTokenizer) -> tuple:
         index = len(output_ids) - output_ids[::-1].index(151668)
     except ValueError:
         index = 0
-    thinking_content = tokenizer.decode(output_ids[:index], skip_special_tokens=True).strip("\n")
+    thinking_content = tokenizer.decode(output_ids[:index], skip_special_tokens=True).strip(
+        "\n"
+    )
     content = tokenizer.decode(output_ids[index:], skip_special_tokens=True).strip("\n")
     return thinking_content, content
 
@@ -66,6 +70,7 @@ def parse_output(output_ids: list, tokenizer: AutoTokenizer) -> tuple:
 # Retrieval (embeddings + ChromaDB)
 # ---------------------------------------------------------------------------
 
+
 def initialize_embedder(model_name: str = EMBED_NAME) -> SentenceTransformer:
     return SentenceTransformer(model_name)
 
@@ -73,7 +78,7 @@ def initialize_embedder(model_name: str = EMBED_NAME) -> SentenceTransformer:
 def load_documents() -> list:
     texts = []
     for path in sorted(glob.glob(os.path.join(DOCS_DIR, "*.txt"))):
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             texts.append(f.read())
     return texts
 
@@ -81,7 +86,7 @@ def load_documents() -> list:
 def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list:
     chunks, start = [], 0
     while start < len(text):
-        chunks.append(text[start:start + chunk_size].strip())
+        chunks.append(text[start : start + chunk_size].strip())
         start += chunk_size - overlap
     return [c for c in chunks if c]
 
@@ -95,8 +100,11 @@ def build_or_load_store(embedder: SentenceTransformer, chunks: list):
         cid = str(abs(hash(c)))
         if cid in existing:
             continue
-        col.add(documents=[c], ids=[cid],
-                embeddings=embedder.encode([c], normalize_embeddings=True).tolist())
+        col.add(
+            documents=[c],
+            ids=[cid],
+            embeddings=embedder.encode([c], normalize_embeddings=True).tolist(),
+        )
     return col
 
 
@@ -107,7 +115,7 @@ def retrieve(col, embedder: SentenceTransformer, query: str, top_k: int = TOP_K)
 
 
 def build_rag_message(question: str, retrieved_chunks: list) -> list:
-    context = "\n\n".join(f"[{i+1}] {c}" for i, c in enumerate(retrieved_chunks))
+    context = "\n\n".join(f"[{i + 1}] {c}" for i, c in enumerate(retrieved_chunks))
     content = (
         "Answer the question using only the context below. "
         "If the context is not sufficient, say so explicitly.\n\n"
@@ -120,6 +128,7 @@ def build_rag_message(question: str, retrieved_chunks: list) -> list:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     print("Loading Qwen3-0.6B...")
