@@ -4,7 +4,7 @@
 
 ## Added
 
-- 📝(docs) add contributing guidelines #1
+- 📝(docs) add AI agents branch and pull request policy #3
 
 ## Changed
 
