@@ -8,4 +8,4 @@
 
 ## Changed
 
-- ♻️(backend) restructure project into src/rag-management #2
+- 🚚(docker) move rag sources to src/rag-management #2

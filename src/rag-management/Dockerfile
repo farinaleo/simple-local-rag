@@ -1,19 +1,19 @@
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 # uv official image: uv is pre-installed, virtualenv managed automatically.
 
-WORKDIR /app/src/rag-management
+WORKDIR /app
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     PYTHONUNBUFFERED=1
 
 # Install dependencies first (cached layer)
-COPY src/rag-management/pyproject.toml src/rag-management/uv.lock* src/rag-management/.python-version ./
+COPY pyproject.toml uv.lock* .python-version ./
 RUN uv sync --frozen --no-install-project --no-dev || uv sync --no-install-project --no-dev
 
 # Project code + documents
-COPY src/rag-management/rag.py .
-COPY src/rag-management/docs/ ./docs/
+COPY rag.py .
+COPY docs/ ./docs/
 
 # Download both models INTO the image at build time -> fully offline container.
 # For gated models, pass the token as a build secret:
