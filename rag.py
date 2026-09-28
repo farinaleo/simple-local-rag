@@ -1,17 +1,23 @@
 import os
 import glob
 import chromadb
-import numpy as np
+from dotenv import load_dotenv
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from sentence_transformers import SentenceTransformer
 
-MODEL_NAME = "Qwen/Qwen3-0.6B"
-EMBED_NAME = "Qwen/Qwen3-Embedding-0.6B"  # alt: "sentence-transformers/all-MiniLM-L6-v2"
+load_dotenv()  # reads .env if present; real env vars take precedence
+
+# --- Configuration (see .env.example) --------------------------------------
+MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen3-0.6B")
+EMBED_NAME = os.environ.get("EMBED_NAME", "Qwen/Qwen3-Embedding-0.6B")
 DOCS_DIR = os.environ.get("DOCS_DIR", "docs")
 CHROMA_PATH = os.environ.get("CHROMA_PATH", "chroma_db")
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 50
-TOP_K = 3
+TOP_K = int(os.environ.get("TOP_K", "3"))
+MAX_NEW_TOKENS = int(os.environ.get("MAX_NEW_TOKENS", "512"))
+ENABLE_THINKING = os.environ.get("ENABLE_THINKING", "false").lower() == "true"
+CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", "500"))
+CHUNK_OVERLAP = int(os.environ.get("CHUNK_OVERLAP", "50"))
+# HF_TOKEN: only needed for gated/private models; read from env by huggingface_hub
 
 
 # ---------------------------------------------------------------------------
@@ -33,7 +39,7 @@ def produce_model_input(messages: list, tokenizer: AutoTokenizer, model) -> dict
         messages,
         tokenize=False,
         add_generation_prompt=True,
-        enable_thinking=False  # faster grounded QA; set True to see reasoning
+        enable_thinking=ENABLE_THINKING  # False = faster grounded QA
     )
     return tokenizer([text], return_tensors="pt").to(model.device)
 
@@ -41,7 +47,7 @@ def produce_model_input(messages: list, tokenizer: AutoTokenizer, model) -> dict
 def text_completion(model_inputs: dict, model) -> list:
     generated_ids = model.generate(
         **model_inputs,
-        max_new_tokens=512
+        max_new_tokens=MAX_NEW_TOKENS
     )
     return generated_ids[0][len(model_inputs.input_ids[0]):].tolist()
 

@@ -1,7 +1,12 @@
 services:
   rag:
-    build: .
+    build:
+      context: .
+      # For gated models, uncomment:
+      # secrets:
+      #   - hf_token
     container_name: rag-qwen
+    env_file: .env
     volumes:
       - ./chroma_db:/app/chroma_db   # persistent vector index
       - ./docs:/app/docs             # editable documents, no rebuild needed
@@ -10,7 +15,7 @@ services:
       - TRANSFORMERS_OFFLINE=1
     stdin_open: true
     tty: true
-    # GPU (requires nvidia-container-toolkit):
+    # GPU (requires nvidia-container-toolkit; also switch the Dockerfile to a CUDA torch index):
     # deploy:
     #   resources:
     #     reservations:
@@ -18,3 +23,7 @@ services:
     #         - driver: nvidia
     #           count: all
     #           capabilities: [gpu]
+
+# secrets:
+#   hf_token:
+#     environment: HF_TOKEN

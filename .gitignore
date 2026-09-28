@@ -1,0 +1,18 @@
+# Environment — never commit secrets
+.env
+
+# Virtualenv & cache
+.venv/
+__pycache__/
+*.pyc
+
+# Data
+chroma_db/
+
+# Hugging Face cache (if stored locally)
+.hf_cache/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store

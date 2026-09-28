@@ -1,5 +1,0 @@
-transformers>=4.51
-accelerate
-sentence-transformers>=3.0
-numpy
-chromadb
