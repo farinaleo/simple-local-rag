@@ -69,5 +69,17 @@ services:
       redis:
         condition: service_healthy
 
+  web:
+    # React SPA: built in Docker, served by nginx (SPA routing fallback).
+    build:
+      context: src/rag-web
+    container_name: rag-web
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
 volumes:
   rag_pgdata:
