@@ -31,10 +31,10 @@ const ACCEPTED_EXTENSIONS = {
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 const STATUS_STYLES: Record<DocumentStatus, string> = {
-  pending: 'bg-neutral-500/15 text-neutral-400',
-  processing: 'bg-amber-500/15 text-amber-400',
-  indexed: 'bg-emerald-500/15 text-emerald-400',
-  failed: 'bg-red-500/15 text-red-400',
+  pending: 'bg-muted text-muted-foreground',
+  processing: 'bg-amber-500/15 text-amber-300',
+  indexed: 'bg-emerald-500/15 text-emerald-300',
+  failed: 'bg-red-500/15 text-red-300',
 }
 
 function formatSize(bytes: number): string {
@@ -92,11 +92,11 @@ export default function DocumentsPage() {
       <div
         {...getRootProps()}
         className={`rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
-          isDragActive ? 'border-emerald-500 bg-emerald-500/5' : 'border-neutral-700'
+          isDragActive ? 'border-emerald-500 bg-emerald-500/5' : 'border-input'
         }`}
       >
         <input {...getInputProps()} />
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted-foreground">
           {isDragActive
             ? 'Drop the files here…'
             : 'Drag & drop files here, or click to select — txt, md, pdf, docx (max 50 MB)'}
@@ -108,7 +108,7 @@ export default function DocumentsPage() {
       )}
 
       {isLoading ? (
-        <p className="text-sm text-neutral-400">Loading documents…</p>
+        <p className="text-sm text-muted-foreground">Loading documents…</p>
       ) : (
         <Table>
           <TableHeader>
@@ -130,7 +130,7 @@ export default function DocumentsPage() {
                 <TableCell>
                   <StatusBadge status={document.status} />
                 </TableCell>
-                <TableCell className="text-neutral-400">
+                <TableCell className="text-muted-foreground">
                   {new Date(document.created_at).toLocaleString()}
                 </TableCell>
                 <TableCell className="text-right">
