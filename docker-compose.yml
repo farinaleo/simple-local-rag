@@ -10,7 +10,12 @@ services:
     container_name: rag-qwen
     env_file: src/rag-management/.env
     volumes:
-      - ./src/rag-management/chroma_db:/app/chroma_db   # persistent vector index
+      # chromadb is backed by SQLite, which needs to write the db file AND its
+      # directory (-journal/-wal sidecars). Docker Desktop bind mounts break
+      # that with "attempt to write a readonly database" (ownership mapping).
+      # A named volume keeps the index persistent and writable; it is fully
+      # rebuildable from docs/ if ever needed.
+      - chroma_data:/app/chroma_db
       - ./src/rag-management/docs:/app/docs             # editable documents, no rebuild
     environment:
       - HF_HUB_OFFLINE=1
@@ -28,6 +33,9 @@ services:
     #         - driver: nvidia
     #           count: all
     #           capabilities: [gpu]
+
+volumes:
+  chroma_data:
 
 # secrets:
 #   hf_token:
