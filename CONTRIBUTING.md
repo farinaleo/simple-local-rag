@@ -4,7 +4,7 @@ Thank you for taking the time to contribute! Please follow these guidelines to e
 
 To get started with the project, please refer to the [README.md](https://github.com/suitenumerique/messages/blob/main/README.md) for detailed instructions on how to run Messages locally.
 
-Contributors are required to sign off their commits with `git commit --signoff`: this confirms that they have read and accepted the [Developer's Certificate of Origin 1.1](https://developercertificate.org/). For security reasons we also require [signing your commits with your SSH or GPG key](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification) with `git commit -S`.
+Contributors are required to sign off their commits with `git commit --signoff`: this confirms that they have read and accepted the [Developer's Certificate of Origin 1.1](https://developercertificate.org/). For security reasons we also require [signing your commits with your SSH or GPG key](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-signature-verification) with `git commit -S`.
 
 Please also check out our [dev handbook](https://suitenumerique.gitbook.io/handbook) to learn our best practices.
 
@@ -23,6 +23,10 @@ To keep full human control over every change, agents MUST:
 4. **Wait for explicit human approval** before merging. Agents must not merge their own pull requests or approve pull requests authored by other agents.
 5. **Document the change** in the pull request description: purpose, files touched, and how to verify the change works.
 6. **Follow all other rules** of this document (commit format, signoff, changelog entry, linting, tests) — being an agent is not an exemption.
+7. **Document every function** with a docstring following the project's single docstring convention (Google style for Python, enforced via the linting rules). One convention only — no mixing styles.
+8. **Keep functions short** and focused on a single responsibility, and give every name (variables, classes, functions, modules) a clear, self-explanatory English identifier.
+9. **Test every feature** and validate it in CI: a feature is not complete until its tests are written and the pipeline passes.
+10. **Write all code in English only** — identifiers, comments and docstrings. Documentation files (README, CHANGELOG) follow the project's documentation language.
 
 Pull requests authored by agents are subject to the same review process as any other contribution, and may be rejected or requested for changes by maintainers at any time.
 
