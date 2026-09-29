@@ -4,6 +4,7 @@
 
 ## Added
 
+- 🧹(backend) migrate rag core to rag_api and remove rag-management #30
 - ✨(backend) add ingestion pipeline for txt pdf docx and md #29
 - ✨(backend) add celery redis ingestion worker #28
 - ✨(backend) add pgvector embedding column with hnsw index #26
@@ -26,6 +27,7 @@
 
 ## Removed
 
+- 🔥(backend) remove the v1 rag-management module after migration #30
 - 🔥(docker) remove duplicate compose files #3
 
 ## Fixed

@@ -1,8 +1,10 @@
 services:
-  # --- v2 backend -----------------------------------------------------------
+  # Central orchestration: each service's build context points to its module,
+  # so module-specific needs (Dockerfile, deps) stay colocated with the logic.
+
   postgres:
     # pgvector image: PostgreSQL with the vector extension available.
-    # Enabled per-database by the backend migrations (pgvector issue).
+    # Enabled per-database by the backend migrations.
     image: pgvector/pgvector:pg16
     container_name: rag-postgres
     environment:
@@ -51,7 +53,7 @@ services:
 
   worker:
     # Celery ingestion worker: same image as the api, celery entrypoint.
-    # The embedding model is baked into the image with the pipeline issue.
+    # The embedding model is baked into the image at build time.
     build:
       context: src/rag-api
     container_name: rag-worker
@@ -67,46 +69,5 @@ services:
       redis:
         condition: service_healthy
 
-  # --- v1 POC ---------------------------------------------------------------
-  rag:
-    # Central orchestration: each service's build context points to its module,
-    # so module-specific needs (Dockerfile, deps) stay colocated with the logic.
-    build:
-      context: src/rag-management
-      # For gated models, uncomment:
-      # secrets:
-      #   - hf_token
-    container_name: rag-qwen
-    env_file: src/rag-management/.env
-    volumes:
-      # chromadb is backed by SQLite, which needs to write the db file AND its
-      # directory (-journal/-wal sidecars). Docker Desktop bind mounts break
-      # that with "attempt to write a readonly database" (ownership mapping).
-      # A named volume keeps the index persistent and writable; it is fully
-      # rebuildable from docs/ if ever needed.
-      - chroma_data:/app/chroma_db
-      - ./src/rag-management/docs:/app/docs             # editable documents, no rebuild
-    environment:
-      - HF_HUB_OFFLINE=1
-      - TRANSFORMERS_OFFLINE=1
-      # The container always uses the models baked into the image at build
-      # time — a HF_HOME set in .env (for local runs) must not override it.
-      - HF_HOME=/opt/hf_cache
-    stdin_open: true
-    tty: true
-    # GPU (requires nvidia-container-toolkit; also switch the Dockerfile to a CUDA torch index):
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
-
 volumes:
-  chroma_data:
   rag_pgdata:
-
-# secrets:
-#   hf_token:
-#     environment: HF_TOKEN

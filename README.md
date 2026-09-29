@@ -2,7 +2,7 @@
 
 # 🦙 simple-local-rag
 
-**A fully local, offline-capable RAG pipeline — your data never leaves your machine.**
+**A fully local, offline-capable RAG service — your data never leaves your machine.**
 
 [![Python](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![uv](https://img.shields.io/badge/uv-managed-de5f00?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
@@ -21,9 +21,11 @@
 
 | Layer | Tech |
 |---|---|
+| API | **Django + DRF** |
 | Generation | **Qwen3-0.6B** |
 | Embeddings | **Qwen3-Embedding-0.6B** |
-| Vector store | **ChromaDB** |
+| Vector store | **PostgreSQL + pgvector** |
+| Worker | **Celery + Redis** |
 | Packaging | **uv** |
 | Runtime | **Docker** |
 
@@ -33,10 +35,11 @@
 ### ✨ Highlights
 
 - 🔒 **Fully offline** after first build
-- 💾 **Persistent index** — incremental ingestion
-- ⚙️ **Config-driven** via `.env`
-- 📦 **Self-contained** Docker image
-- ♻️ **Simple by design** — no external services
+- 🗄️ **Transactional store** — metadata and vectors in one PostgreSQL
+- ⚡ **Async ingestion** — uploads return 202, a Celery worker embeds
+- 🧩 **Atomic document lifecycle** — delete leaves no orphan vectors
+- ⚙️ **Config-driven** via environment variables
+- 📦 **Self-contained** Docker images
 
 </td>
 </tr>
@@ -52,16 +55,16 @@ From document ingestion to the final answer, everything runs locally:
 
 ```mermaid
 flowchart LR
-    subgraph INGEST["📄 Ingestion (once, then incremental)"]
+    subgraph INGEST["📄 Ingestion (async, via Celery)"]
         direction LR
-        A[/"docs/*.txt"/] --> B["✂️ chunk_text<br/>500 chars · 50 overlap"]
-        B --> C["🧮 Qwen3-Embedding<br/>encode chunks"]
-        C --> D[("🗄️ ChromaDB<br/>persistent index")]
+        A[/"upload txt · pdf · docx · md"/] --> B["✂️ extract + chunk"]
+        B --> C["🧲 Qwen3-Embedding<br/>encode chunks"]
+        C --> D[("🗄️ PostgreSQL + pgvector<br/>HNSW cosine index")]
     end
 
     subgraph QUERY["🔍 Retrieval (per question)"]
         direction LR
-        Q[/"💬 User question"/] --> E["🧮 Qwen3-Embedding<br/>encode query"]
+        Q[/"💬 User question"/] --> E["🧲 Qwen3-Embedding<br/>encode query"]
         E --> F["📏 cosine similarity<br/>top-k = 3"]
     end
 
@@ -87,32 +90,32 @@ flowchart LR
 ```mermaid
 flowchart TB
     subgraph HOST["🖥️ Host"]
-        CACHE[("💾 HF cache<br/>~/.cache/huggingface")]
-        ENV["⚙️ .env<br/>models · paths · HF_TOKEN"]
+        ENV["⚙️ .env<br/>models · urls · keys"]
         subgraph RUNTIME["⚡ Runtime (RAM / VRAM)"]
             LLM["🦙 Qwen3-0.6B<br/>generator"]
-            EMB["🧮 Embedder"]
+            EMB["🧲 Embedder"]
         end
     end
 
-    subgraph CONTAINER["🐳 Container (optional)"]
-        APP["📦 rag.py"]
-        VDB[("🗄️ ChromaDB<br/>volume")]
-        DOCS[/"📂 docs/ volume"/]
+    subgraph COMPOSE["🐳 docker-compose"]
+        API["📦 api<br/>Django + DRF"]
+        WORKER["👷 worker<br/>Celery"]
+        PG[("🗄️ postgres + pgvector<br/>named volume")]
+        REDIS(("📮 redis"))
     end
 
-    HF["☁️ Hugging Face Hub<br/>build time only"] ==>|"weights baked in"| CONTAINER
-    CACHE -.->|"local runs"| RUNTIME
-    ENV --> APP
-    DOCS --> APP
-    APP --> LLM
-    APP --> EMB
-    APP --> VDB
+    HF["☁️ Hugging Face Hub<br/>build time only"] ==>|"weights baked in"| COMPOSE
+    ENV -.-> API
+    API --> PG
+    API --> REDIS
+    REDIS --> WORKER
+    WORKER --> PG
+    WORKER --> EMB
 
     classDef cloud fill:#ffebee,stroke:#c62828,stroke-width:2px
     classDef vol fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
     class HF cloud
-    class VDB,DOCS vol
+    class PG,REDIS vol
 ```
 
 > 🔌 Once built, `HF_HUB_OFFLINE=1` blocks every call to the Hub — the
@@ -123,80 +126,68 @@ flowchart TB
 ```mermaid
 flowchart TD
     ROOT["📁 simple-local-rag/"] --> ORCH["🐳 docker-compose.yml<br/><b>central orchestration</b>"]
+    ROOT --> MK["🛠️ Makefile<br/>docker commands by usage"]
     ROOT --> META["📝 README · CHANGELOG<br/>CONTRIBUTING · .gitignore"]
     ROOT --> CI["👷 .github/workflows/ci.yml"]
     ROOT --> SRC["📁 src/"]
-    SRC --> RM["📁 rag-management/<br/><i>v1 POC — reference until migrated</i>"]
-    RM --> CORE["🦙 rag.py<br/>full RAG pipeline"]
-    RM --> UVCFG["⚙️ pyproject.toml · ruff.toml<br/>.python-version · .env.example"]
-    RM --> DOCKER["🐳 Dockerfile · .dockerignore<br/><i>module-specific needs</i>"]
-    RM --> DATA["📂 docs/<br/>knowledge base"]
-    SRC --> API["📁 rag-api/<br/>Django backend (v2, to come)"]
-    SRC --> WEB["📁 rag-web/<br/>React frontend (v2, to come)"]
+    SRC --> API["📁 rag-api/<br/>Django backend (v2)"]
+    API --> CORE["🧩 rag_core/<br/>indexer · retriever · generator"]
+    API --> ING["📦 ingestion/<br/>extractors · chunking · embedding · tasks"]
+    API --> DOCSM["🗃️ documents/<br/>models · retrieval · migrations"]
+    API --> CFG["⚙️ config/<br/>settings · urls · celery"]
+    SRC --> WEB["📁 rag-web/<br/>React frontend (v2, scaffold)"]
 
     classDef root fill:#ede7f6,stroke:#5e35b1,stroke-width:2px
     classDef orch fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
     classDef pkg fill:#e8eaf6,stroke:#3949ab,stroke-width:2px
     classDef core fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
     classDef future fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    classDef legacy fill:#fbe9e7,stroke:#bf360c,stroke-width:2px
     class ROOT root
-    class ORCH orch
-    class RM,DATA legacy
-    class CORE,DOCKER,UVCFG core
-    class API,WEB future
+    class ORCH,MK orch
+    class API pkg
+    class CORE,ING,DOCSM,CFG core
+    class WEB future
 ```
 
 **Design principle:** each module in `src/` owns its `Dockerfile` and config
 (specific needs colocated with the business logic), while the root
-`docker-compose.yml` orchestrates **all** services in one place — ready to
-add more modules later.
+`docker-compose.yml` orchestrates **all** services in one place.
 
-The v1 RAG logic (Python, uv config, Docker image) lives in
-`src/rag-management/`. It stays the reference until its logic is migrated to
-`src/rag-api/` in the v2, after which it will be removed.
-
-The v2 zones are scaffolded:
-
-- **`src/rag-api/`** — Django backend exposing the RAG APIs (documents, query),
-  backed by PostgreSQL + pgvector with a Celery + Redis ingestion worker.
+- **`src/rag-api/`** — Django backend exposing the RAG APIs, backed by
+  PostgreSQL + pgvector with a Celery + Redis ingestion worker.
 - **`src/rag-web/`** — React + TypeScript SPA (documents management and chat
-  interface).
+  interface), scaffolded — initialized in the v2 frontend issues.
 
 ---
 
 ## 🚀 Getting started
 
+### 🐳 Docker (from the repository root)
+
+```bash
+make up            # or: docker compose up -d --build
+make migrate       # apply migrations (pgvector extension + HNSW index)
+make health        # curl http://localhost:8000/api/health/
+```
+
+The root compose file points each service at its module's build context.
+
+> 🔌 The image sets `HF_HUB_OFFLINE=1` and ships the embedding model, so
+> once built it runs with no internet access.
+
+### 🧑‍💻 Local development
+
 ```bash
 # 1 — Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2 — Configure
-cd src/rag-management
-cp .env.example .env      # HF_TOKEN only needed for gated models
-
-# 3 — Run (uv creates .venv automatically)
-uv sync && uv run rag.py
+# 2 — Configure and run the backend
+cd src/rag-api
+uv sync
+cp .env.example .env
+uv run manage.py migrate
+uv run manage.py runserver
 ```
-
-Drop your `.txt` files in `src/rag-management/docs/` — the index persists in
-`chroma_db/` and only new chunks are indexed on subsequent runs.
-
-### 🐳 Docker (from the repository root)
-
-```bash
-cp src/rag-management/.env.example src/rag-management/.env
-docker compose build              # ~15 min first time (models baked into the image)
-docker compose up -d
-docker compose exec rag uv run rag.py
-```
-
-The root compose file points each service at its module's build context —
-adding a future service (API, UI, another RAG module…) is just a new entry.
-
-> 🔌 The image sets `HF_HUB_OFFLINE=1` and ships both models, so once built it
-> runs with no internet access. Test it: `docker compose down`, disconnect
-> the network, `docker compose up` — it still answers.
 
 ### 🛠️ Makefile shortcuts
 
@@ -204,7 +195,7 @@ A `Makefile` at the repository root wraps the Docker commands, grouped by
 usage — run `make help` to list them:
 
 ```bash
-make up            # build & start the v2 backend stack (postgres + api)
+make up            # build & start the v2 backend stack
 make migrate       # apply migrations (pgvector extension + HNSW index)
 make db-check      # inspect the extension, embedding column and index
 make test          # backend test suite against the compose postgres
@@ -214,30 +205,25 @@ make down          # stop everything, keep the volumes
 ```
 
 <details>
-<summary><b>🔐 Gated models?</b> Pass the token without leaking it</summary>
-
-```bash
-docker build --secret HF_TOKEN=hf_xxxx src/rag-management
-```
-</details>
-
-<details>
-<summary><b>⚙️ Configuration reference</b> (all in <code>src/rag-management/.env</code>)</summary>
+<summary><b>⚙️ Configuration reference</b> (all in <code>src/rag-api/.env</code>)</summary>
 
 | Variable | Default | Description |
 |---|---|---|
-| `HF_TOKEN` | — | HF token (public models: not needed) |
-| `HF_HOME` | `~/.cache/huggingface` | HF cache location — absolute path (local runs) |
+| `DEBUG` | `true` | Django debug mode |
+| `SECRET_KEY` | dev key | Django secret key |
+| `ALLOWED_HOSTS` | `localhost,127.0.0.1` | Comma-separated hosts |
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/rag` | PostgreSQL connection |
+| `CELERY_BROKER_URL` | `redis://localhost:6379/0` | Redis broker for the worker |
+| `HF_HOME` | `~/.cache/huggingface` | HF cache location (local runs) |
 | `MODEL_NAME` | `Qwen/Qwen3-0.6B` | Generation model |
 | `EMBED_NAME` | `Qwen/Qwen3-Embedding-0.6B` | Embedding model |
-| `DOCS_DIR` | `docs` | Knowledge base folder |
-| `CHROMA_PATH` | `chroma_db` | Persistent index path |
 | `TOP_K` | `3` | Chunks retrieved per query |
-| `CHUNK_SIZE` / `CHUNK_OVERLAP` | `500` / `50` | Chunking params |
+| `CHUNK_SIZE` | `500` | Max characters per chunk |
 | `MAX_NEW_TOKENS` | `512` | Generation budget |
 | `ENABLE_THINKING` | `false` | Qwen3 thinking mode |
 
 Real environment variables override `.env` values.
+
 </details>
 
 ---
@@ -248,8 +234,8 @@ Real environment variables override `.env` values.
   both for reasoning-heavy use cases.
 - The pyproject pins **CPU torch** via uv's `pytorch-cpu` index — swap for a
   CUDA index when building with a GPU.
-- Need multi-user serving or heavy metadata filtering? Swap ChromaDB for
-  **Qdrant**.
+- Need multi-user serving or heavy metadata filtering? See the v3 roadmap
+  (dedicated vector DB evaluation).
 
 ## 🤝 Contributing
 

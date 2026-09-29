@@ -2,8 +2,7 @@
 
 Every deployment-specific value (debug flag, secret key, database URL)
 is read from the environment, with a `.env` file loaded as convenience
-defaults — real environment variables take precedence, same pattern as
-the POC in `src/rag-management/`.
+defaults — real environment variables take precedence.
 """
 
 import os
