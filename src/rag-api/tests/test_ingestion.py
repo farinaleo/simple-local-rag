@@ -42,7 +42,7 @@ def test_ingest_document_reaches_indexed(eager_celery, document, monkeypatch):
 def test_ingest_document_marks_failed_on_error(eager_celery, document, monkeypatch):
     """A failing pipeline leaves the row failed with the error stored."""
     monkeypatch.setattr(
-        "ingestion.tasks._run_ingestion_pipeline",
+        "rag_core.indexer.index_document",
         lambda doc: (_ for _ in ()).throw(RuntimeError("unreadable pdf")),
     )
 

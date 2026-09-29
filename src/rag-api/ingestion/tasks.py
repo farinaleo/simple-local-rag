@@ -1,13 +1,11 @@
-"""Celery tasks for document ingestion: extraction, chunking, embedding."""
+"""Celery tasks for document ingestion: status orchestration."""
 
 import logging
 
 from celery import shared_task
-from django.db import transaction
 
-from documents.models import Chunk, Document
-from ingestion.chunking import split_text
-from ingestion.extractors import extract_text
+from documents.models import Document
+from rag_core import indexer
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +34,7 @@ def ingest_document(self, document_id):
     document.mark_processing()
 
     try:
-        _run_ingestion_pipeline(document)
+        indexer.index_document(document)
     except Exception as error:  # noqa: BLE001 — any failure marks the row
         logger.exception("ingest_document: document %s failed", document_id)
         document.mark_failed(str(error))
@@ -45,53 +43,3 @@ def ingest_document(self, document_id):
     document.mark_indexed()
     logger.info("ingest_document: document %s indexed", document_id)
     return "indexed"
-
-
-def _run_ingestion_pipeline(document):
-    """Run the ingestion stages for a document.
-
-    Extracts the text, chunks it, embeds the chunks and replaces the
-    document chunks (and their vectors) atomically — re-ingesting an
-    existing document leaves no orphan chunks.
-
-    Args:
-        document: The Document currently in ``processing`` status.
-
-    Raises:
-        ValueError: On an unsupported file type.
-        OSError: On an unreadable or missing file.
-    """
-    text = extract_text(document.storage_path)
-    chunks = split_text(text)
-
-    with transaction.atomic():
-        document.chunks.all().delete()
-        Chunk.objects.bulk_create(
-            Chunk(
-                document=document,
-                ordinal=ordinal,
-                content=content,
-                embedding=_embed_chunk(content),
-            )
-            for ordinal, content in enumerate(chunks)
-        )
-
-
-def _embed_chunk(content):
-    """Compute the embedding vector of a chunk.
-
-    Uses the Qwen3-Embedding-0.6B model via sentence-transformers,
-    following the proven POC setup. The model is loaded once per
-    worker process.
-
-    Args:
-        content: The chunk text.
-
-    Returns:
-        The embedding as a list of floats (1024 dimensions).
-    """
-    from ingestion.embedding import get_embedding_model
-
-    model = get_embedding_model()
-    vector = model.encode(content, normalize_embeddings=True)
-    return list(vector)

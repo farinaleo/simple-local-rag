@@ -14,12 +14,9 @@ help: ## List available targets
 up: ## Build and start the v2 backend stack (postgres + redis + api + worker)
 	$(COMPOSE) up -d --build postgres redis api worker
 
-.PHONY: up-poc
-up-poc: ## Build and start the v1 POC (rag)
-	$(COMPOSE) up -d --build rag
 
 .PHONY: up-all
-up-all: ## Build and start every service (v2 backend + v1 POC)
+up-all: ## Build and start every service (v2 backend stack)
 	$(COMPOSE) up -d --build
 
 .PHONY: down
@@ -88,8 +85,3 @@ health: ## Curl the api health endpoint
 superuser: ## Create a Django superuser (interactive)
 	$(COMPOSE) exec api uv run manage.py createsuperuser
 
-# --- POC v1 -------------------------------------------------------------------
-
-.PHONY: poc-run
-poc-run: ## Run the v1 POC interactive RAG session in its container
-	$(COMPOSE) exec rag uv run rag.py
