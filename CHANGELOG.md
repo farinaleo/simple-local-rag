@@ -4,6 +4,8 @@
 
 ## Added
 
+- 🐳(docker) add web service serving the react build via nginx #33
+- ✨(frontend) add react vite typescript scaffold with shadcn #33
 - ✨(backend) add query api with sse streaming and history #32
 - ✨(backend) add documents rest api with upload and delete #31
 - 🧹(backend) migrate rag core to rag_api and remove rag-management #30
