@@ -30,3 +30,18 @@ uv run pytest
 uvx ruff check .
 uvx ruff format --check .
 ```
+
+## Docker (from the repository root)
+
+The root compose file starts the v2 backend stack (API + PostgreSQL
+with pgvector available):
+
+```bash
+docker compose up -d postgres api
+curl http://localhost:8000/api/health/        # {"status": "ok"}
+docker compose exec api uv run manage.py migrate
+docker compose exec api uv run pytest
+```
+
+The API image is built from the module's own `Dockerfile` (Django dev
+server for now — Gunicorn lands with the v2 deployment issue).
