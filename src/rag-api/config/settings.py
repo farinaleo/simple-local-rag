@@ -22,6 +22,8 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(","
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/rag")
 
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+
 # Parse DATABASE_URL into Django connection parameters (kept simple on
 # purpose: no extra dependency, standard postgresql:// URL format).
 _url = urlparse(DATABASE_URL)
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "health",
     "documents",
+    "ingestion",
 ]
 
 MIDDLEWARE = [

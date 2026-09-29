@@ -20,6 +20,18 @@ services:
       timeout: 3s
       retries: 10
 
+  redis:
+    # Broker for the Celery ingestion worker.
+    image: redis:7-alpine
+    container_name: rag-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build:
       context: src/rag-api
@@ -28,10 +40,31 @@ services:
       DEBUG: "true"
       SECRET_KEY: dev-only
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag
+      CELERY_BROKER_URL: redis://redis:6379/0
     ports:
       - "8000:8000"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    # Celery ingestion worker: same image as the api, celery entrypoint.
+    # The embedding model is baked into the image with the pipeline issue.
+    build:
+      context: src/rag-api
+    container_name: rag-worker
+    command: uv run celery -A config worker --loglevel=info --concurrency=1
+    environment:
+      DEBUG: "true"
+      SECRET_KEY: dev-only
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   # --- v1 POC ---------------------------------------------------------------

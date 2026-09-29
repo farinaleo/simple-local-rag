@@ -11,8 +11,8 @@ help: ## List available targets
 # --- Lifecycle ----------------------------------------------------------------
 
 .PHONY: up
-up: ## Build and start the v2 backend stack (postgres + api)
-	$(COMPOSE) up -d --build postgres api
+up: ## Build and start the v2 backend stack (postgres + redis + api + worker)
+	$(COMPOSE) up -d --build postgres redis api worker
 
 .PHONY: up-poc
 up-poc: ## Build and start the v1 POC (rag)
@@ -41,6 +41,10 @@ ps: ## Show the running services
 .PHONY: logs
 logs: ## Follow the api logs (Ctrl+C to exit)
 	$(COMPOSE) logs -f api
+
+.PHONY: logs-worker
+logs-worker: ## Follow the ingestion worker logs (Ctrl+C to exit)
+	$(COMPOSE) logs -f worker
 
 # --- Database -----------------------------------------------------------------
 
