@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "health",
     "documents",
     "ingestion",
+    "queries",
 ]
 
 MIDDLEWARE = [
