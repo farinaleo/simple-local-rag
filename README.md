@@ -126,20 +126,25 @@ flowchart TD
     ROOT --> META["📝 README · CHANGELOG<br/>CONTRIBUTING · .gitignore"]
     ROOT --> CI["👷 .github/workflows/ci.yml"]
     ROOT --> SRC["📁 src/"]
-    SRC --> RM["📁 rag-management/"]
+    SRC --> RM["📁 rag-management/<br/><i>v1 POC — reference until migrated</i>"]
     RM --> CORE["🦙 rag.py<br/>full RAG pipeline"]
     RM --> UVCFG["⚙️ pyproject.toml · ruff.toml<br/>.python-version · .env.example"]
     RM --> DOCKER["🐳 Dockerfile · .dockerignore<br/><i>module-specific needs</i>"]
     RM --> DATA["📂 docs/<br/>knowledge base"]
+    SRC --> API["📁 rag-api/<br/>Django backend (v2, to come)"]
+    SRC --> WEB["📁 rag-web/<br/>React frontend (v2, to come)"]
 
     classDef root fill:#ede7f6,stroke:#5e35b1,stroke-width:2px
     classDef orch fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
     classDef pkg fill:#e8eaf6,stroke:#3949ab,stroke-width:2px
     classDef core fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef future fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef legacy fill:#fbe9e7,stroke:#bf360c,stroke-width:2px
     class ROOT root
     class ORCH orch
-    class RM,DATA pkg
+    class RM,DATA legacy
     class CORE,DOCKER,UVCFG core
+    class API,WEB future
 ```
 
 **Design principle:** each module in `src/` owns its `Dockerfile` and config
@@ -147,7 +152,16 @@ flowchart TD
 `docker-compose.yml` orchestrates **all** services in one place — ready to
 add more modules later.
 
-All RAG logic (Python, uv config, Docker image) lives in `src/rag-management/`.
+The v1 RAG logic (Python, uv config, Docker image) lives in
+`src/rag-management/`. It stays the reference until its logic is migrated to
+`src/rag-api/` in the v2, after which it will be removed.
+
+The v2 zones are scaffolded:
+
+- **`src/rag-api/`** — Django backend exposing the RAG APIs (documents, query),
+  backed by PostgreSQL + pgvector with a Celery + Redis ingestion worker.
+- **`src/rag-web/`** — React + TypeScript SPA (documents management and chat
+  interface).
 
 ---
 
