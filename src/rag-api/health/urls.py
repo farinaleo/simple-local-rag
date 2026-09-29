@@ -1,0 +1,9 @@
+"""URL routes for the health app: a single liveness endpoint."""
+
+from django.urls import path
+
+from health.views import health_check
+
+urlpatterns = [
+    path("", health_check, name="health-check"),
+]

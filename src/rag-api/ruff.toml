@@ -1,0 +1,28 @@
+# Ruff configuration — enforced by CI (ruff check + ruff format)
+line-length = 100
+target-version = "py312"
+
+[lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort (import order)
+    "B",    # bugbear (common bugs)
+    "UP",   # pyupgrade (modern syntax)
+    "D",    # pydocstyle (Google style per the AI Agents Policy item 7)
+]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.per-file-ignores]
+# Test modules and Django config glue: module-level Django objects and
+# standard generated patterns do not require docstrings.
+"tests/*" = ["D"]
+"config/*" = ["D"]
+"manage.py" = ["D"]
+"*/migrations/*" = ["D"]
+
+[lint.isort]
+known-first-party = ["config", "health"]
