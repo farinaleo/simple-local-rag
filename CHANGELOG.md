@@ -4,7 +4,9 @@
 
 ## Added
 
-- 📦(config) scaffold v2 src/rag-api and src/rag-web directories #19
+- 🐳(docker) add api and postgres services to the compose file #24
+- ✨(backend) add django drf scaffold with health endpoint #24
+- 📦(config) scaffold v2 src/rag-api and src/rag-web directories #23
 
 - 📝(docs) add contributing guidelines #1
 - 📝(docs) add mermaid diagrams for architecture and structure #1

@@ -1,4 +1,40 @@
 services:
+  # --- v2 backend -----------------------------------------------------------
+  postgres:
+    # pgvector image: PostgreSQL with the vector extension available.
+    # Enabled per-database by the backend migrations (pgvector issue).
+    image: pgvector/pgvector:pg16
+    container_name: rag-postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rag
+    volumes:
+      # Named volume only — host bind mounts broke sqlite writes on the POC;
+      # same lesson applies to the database files.
+      - rag_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rag"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: src/rag-api
+    container_name: rag-api
+    environment:
+      DEBUG: "true"
+      SECRET_KEY: dev-only
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # --- v1 POC ---------------------------------------------------------------
   rag:
     # Central orchestration: each service's build context points to its module,
     # so module-specific needs (Dockerfile, deps) stay colocated with the logic.
@@ -36,6 +72,7 @@ services:
 
 volumes:
   chroma_data:
+  rag_pgdata:
 
 # secrets:
 #   hf_token:
