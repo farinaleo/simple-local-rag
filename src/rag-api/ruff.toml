@@ -22,7 +22,7 @@ convention = "google"
 "tests/*" = ["D"]
 "config/*" = ["D"]
 "manage.py" = ["D"]
-"*/migrations/*" = ["D"]
+"*/migrations/*" = ["D", "E501"]
 
 [lint.isort]
 known-first-party = ["config", "health"]
