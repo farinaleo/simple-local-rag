@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "celery[redis]>=5.6.3",
     "django>=5.1",
+    "django-cors-headers>=4.9.0",
     "djangorestframework>=3.15",
     "pgvector[django]>=0.5.0",
     "psycopg[binary]>=3.2",

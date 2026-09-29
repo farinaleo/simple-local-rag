@@ -23,6 +23,11 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@lo
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
 
+# CORS: the SPA dev server and the containerized web service.
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+).split(",")
+
 # Parse DATABASE_URL into Django connection parameters (kept simple on
 # purpose: no extra dependency, standard postgresql:// URL format).
 _url = urlparse(DATABASE_URL)
@@ -40,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "corsheaders",
     "health",
     "documents",
     "ingestion",
@@ -48,6 +54,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

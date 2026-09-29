@@ -8,6 +8,11 @@
 
 ## Added
 
+- ✨(frontend) add documents page with upload status and delete #34
+
+## Fixed
+
+- ♿(frontend) fix dark theme contrast making table headers unreadable #34
 - 🐳(docker) add web service serving the react build via nginx #33
 - ✨(frontend) add react vite typescript scaffold with shadcn #33
 - ✨(backend) add query api with sse streaming and history #32
