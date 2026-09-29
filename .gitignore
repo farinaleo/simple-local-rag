@@ -21,3 +21,9 @@ chroma_db/
 
 # macOS AppleDouble metadata files (._foo) created on exFAT/FAT drives
 ._*
+
+# Frontend (src/rag-web)
+src/rag-web/node_modules/
+src/rag-web/dist/
+src/rag-web/.env
+src/rag-web/*.tsbuildinfo
