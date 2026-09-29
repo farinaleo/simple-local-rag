@@ -4,6 +4,7 @@
 
 ## Added
 
+- 📝(docs) add contributing guidelines #1
 - 📝(docs) add mermaid diagrams for architecture and structure #1
 - 💄(docs) modernize readme with badges, tables and styled diagrams #1
 - 👷(CI) add ruff lint and format quality gate #2
@@ -17,3 +18,7 @@
 ## Removed
 
 - 🔥(docker) remove duplicate compose files #3
+
+## Fixed
+
+- 🐛(docker) fix dockerfile parse error in the model download step #5
