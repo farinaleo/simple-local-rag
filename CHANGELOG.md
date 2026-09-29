@@ -24,3 +24,4 @@
 - 🐛(docker) fix dockerfile parse error in the model download step #5
 - 🐛(docker) set hf_home before model download so the cache is found #6
 - 🐛(docker) named volume for chroma_db to avoid readonly sqlite #7
+- 🐛(docker) exclude macos metadata files from the build context #8

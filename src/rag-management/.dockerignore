@@ -3,3 +3,9 @@ __pycache__/
 chroma_db/
 .git/
 .env
+
+# macOS metadata: on exFAT/FAT external drives, the Finder stores extended
+# attributes in AppleDouble files (._foo next to foo). Docker Desktop fails
+# to read their xattrs and aborts the context transfer — exclude them.
+._*
+.DS_Store

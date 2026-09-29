@@ -16,3 +16,6 @@ chroma_db/
 .idea/
 .vscode/
 .DS_Store
+
+# macOS AppleDouble metadata files (._foo) created on exFAT/FAT drives
+._*
