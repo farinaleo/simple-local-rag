@@ -15,7 +15,7 @@ def retrieve_chunks(question, top_k=None):
             ``TOP_K`` environment variable or 3).
 
     Returns:
-        The list of (chunk, distance) pairs, closest first.
+        The list of matching chunks, closest first.
     """
     if top_k is None:
         top_k = int(os.environ.get("TOP_K", "3"))

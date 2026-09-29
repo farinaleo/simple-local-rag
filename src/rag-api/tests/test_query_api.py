@@ -6,6 +6,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from documents.models import Chunk, Document, Query
+from tests.fakes import FakeEmbeddingModel
 
 pytestmark = pytest.mark.django_db
 
@@ -46,7 +47,7 @@ def test_query_streams_tokens_then_sources(indexed_document, monkeypatch):
     monkeypatch.setattr(
         "queries.views.retrieve_chunks",
         lambda question, **kw: [
-            (indexed_document.chunks.first(), 0.1),
+            indexed_document.chunks.first(),
         ],
     )
     monkeypatch.setattr(
@@ -78,7 +79,7 @@ def test_query_persists_answer_with_sources(indexed_document, monkeypatch):
     monkeypatch.setattr(
         "queries.views.retrieve_chunks",
         lambda question, **kw: [
-            (indexed_document.chunks.first(), 0.1),
+            indexed_document.chunks.first(),
         ],
     )
     monkeypatch.setattr(
@@ -137,3 +138,30 @@ def test_history_returns_queries_newest_first(indexed_document):
     results = response.json()
     assert [entry["question"] for entry in results] == ["new?", "old?"]
     assert results[0]["sources"][0]["content"] == "The tower is tall."
+
+
+def test_query_uses_real_retriever_contract(indexed_document, monkeypatch):
+    """The view consumes retrieve_chunks output without tuple unpacking.
+
+    Guards the integration between queries.views and rag_core.retriever:
+    retrieve_chunks returns a list of chunks, not (chunk, distance) pairs.
+    """
+    chunk = indexed_document.chunks.first()
+    chunk.embedding = [0.0] * 1024
+    chunk.embedding[len("How tall?") % 1024] = 1.0
+    chunk.save()
+    monkeypatch.setattr(
+        "ingestion.embedding.get_embedding_model",
+        lambda: FakeEmbeddingModel(),
+    )
+    monkeypatch.setattr(
+        "queries.views.generate_answer",
+        lambda question, texts: ("", "Grounded answer."),
+    )
+
+    response = client.post("/api/query/", {"question": "How tall?"}, format="json")
+
+    assert response.status_code == 200
+    events = _parse_sse(response)
+    assert events[-1][0] == "sources"
+    assert events[-1][1]["sources"][0]["content"] == "The tower is tall."
