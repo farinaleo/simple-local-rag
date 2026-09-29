@@ -10,3 +10,26 @@ export interface DocumentItem {
   created_at: string
   updated_at: string
 }
+
+export interface QuerySource {
+  id: number
+  ordinal: number
+  content: string
+  document: {
+    id: number
+    original_filename: string
+  }
+}
+
+export interface QueryHistoryItem {
+  id: number
+  question: string
+  answer: string
+  sources: QuerySource[]
+  created_at: string
+}
+
+export type StreamEvent =
+  | { type: 'token'; text: string }
+  | { type: 'sources'; queryId: number; sources: QuerySource[] }
+  | { type: 'error'; detail: string }

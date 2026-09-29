@@ -13,6 +13,8 @@
 
 ## Added
 
+- ✨(frontend) add chat page with streaming answers sources and history #36
+
 - ✨(frontend) add documents page with upload status and delete #34
 
 ## Fixed
