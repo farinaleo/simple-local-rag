@@ -4,6 +4,7 @@
 
 ## Added
 
+- 🐳(docker) add makefile with docker commands grouped by usage #27
 - ✨(backend) add document chunk and query data models #25
 - 🐳(docker) add api and postgres services to the compose file #24
 - ✨(backend) add django drf scaffold with health endpoint #24

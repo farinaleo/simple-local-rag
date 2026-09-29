@@ -198,6 +198,21 @@ adding a future service (API, UI, another RAG module…) is just a new entry.
 > runs with no internet access. Test it: `docker compose down`, disconnect
 > the network, `docker compose up` — it still answers.
 
+### 🛠️ Makefile shortcuts
+
+A `Makefile` at the repository root wraps the Docker commands, grouped by
+usage — run `make help` to list them:
+
+```bash
+make up            # build & start the v2 backend stack (postgres + api)
+make migrate       # apply migrations (pgvector extension + HNSW index)
+make db-check      # inspect the extension, embedding column and index
+make test          # backend test suite against the compose postgres
+make lint          # ruff lint + format checks
+make health        # curl the api health endpoint
+make down          # stop everything, keep the volumes
+```
+
 <details>
 <summary><b>🔐 Gated models?</b> Pass the token without leaking it</summary>
 
