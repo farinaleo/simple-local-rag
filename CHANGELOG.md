@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## Fixed
+
+- 🐳(docker) share uploads volume between api and worker containers #35
+
 ## Added
 
 - 🐳(docker) add web service serving the react build via nginx #33
