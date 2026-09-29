@@ -4,6 +4,8 @@
 
 ## Added
 
+- 📦(config) scaffold v2 src/rag-api and src/rag-web directories #19
+
 - 📝(docs) add contributing guidelines #1
 - 📝(docs) add mermaid diagrams for architecture and structure #1
 - 💄(docs) modernize readme with badges, tables and styled diagrams #1
