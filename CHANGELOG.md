@@ -22,3 +22,4 @@
 ## Fixed
 
 - 🐛(docker) fix dockerfile parse error in the model download step #5
+- 🐛(docker) set hf_home before model download so the cache is found #6

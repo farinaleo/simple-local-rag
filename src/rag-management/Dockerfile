@@ -7,6 +7,12 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     PYTHONUNBUFFERED=1
 
+# The HF cache location MUST be declared BEFORE the model download RUN:
+# an ENV only applies to the instructions that follow it. Otherwise the
+# models are baked into the build user's default cache while the runtime
+# looks in HF_HOME and finds nothing.
+ENV HF_HOME=/opt/hf_cache
+
 # Install dependencies first (cached layer)
 COPY pyproject.toml uv.lock* .python-version ./
 RUN uv sync --frozen --no-install-project --no-dev || uv sync --no-install-project --no-dev
@@ -26,6 +32,7 @@ RUN --mount=type=secret,id=HF_TOKEN \
     uv run python -c "from transformers import AutoModelForCausalLM, AutoTokenizer; from sentence_transformers import SentenceTransformer; AutoTokenizer.from_pretrained('Qwen/Qwen3-0.6B'); AutoModelForCausalLM.from_pretrained('Qwen/Qwen3-0.6B', torch_dtype='auto'); SentenceTransformer('Qwen/Qwen3-Embedding-0.6B')"
 
 # No network calls to the Hugging Face Hub at runtime.
+# (HF_HOME is repeated here so the offline block is self-documenting.)
 ENV HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1 \
     HF_HOME=/opt/hf_cache
