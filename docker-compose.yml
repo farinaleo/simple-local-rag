@@ -43,6 +43,11 @@ services:
       SECRET_KEY: dev-only
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag
       CELERY_BROKER_URL: redis://redis:6379/0
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      # Uploaded files must be reachable by the worker too; a named volume
+      # shared between api and worker makes the storage path consistent.
+      - rag_uploads:/data/uploads
     ports:
       - "8000:8000"
     depends_on:
@@ -63,6 +68,9 @@ services:
       SECRET_KEY: dev-only
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag
       CELERY_BROKER_URL: redis://redis:6379/0
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - rag_uploads:/data/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,3 +91,4 @@ services:
 
 volumes:
   rag_pgdata:
+  rag_uploads:
