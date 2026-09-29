@@ -4,6 +4,10 @@
 
 ## Fixed
 
+- 🐛(backend) fix query view unpacking chunks as distance tuples #37
+
+## Fixed
+
 - 🐳(docker) share uploads volume between api and worker containers #35
 
 ## Added

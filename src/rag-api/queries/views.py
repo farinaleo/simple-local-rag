@@ -33,7 +33,7 @@ class QueryView(APIView):
             return Response({"detail": "no question provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         retrieved = retrieve_chunks(question)
-        chunks = [chunk for chunk, _distance in retrieved]
+        chunks = list(retrieved)
         chunk_texts = [chunk.content for chunk in chunks]
 
         return StreamingHttpResponse(
