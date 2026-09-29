@@ -13,6 +13,7 @@ here.
 """
 
 from django.db import models
+from pgvector.django import VectorField
 
 
 class DocumentStatus(models.TextChoices):
@@ -70,6 +71,7 @@ class Chunk(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="chunks")
     ordinal = models.PositiveIntegerField()
     content = models.TextField()
+    embedding = VectorField(dimensions=1024, null=True, blank=True)
 
     class Meta:
         """Ordering and uniqueness of chunks within a document."""

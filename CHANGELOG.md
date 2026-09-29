@@ -4,6 +4,7 @@
 
 ## Added
 
+- ✨(backend) add pgvector embedding column with hnsw index #26
 - 🐳(docker) add makefile with docker commands grouped by usage #27
 - ✨(backend) add document chunk and query data models #25
 - 🐳(docker) add api and postgres services to the compose file #24
