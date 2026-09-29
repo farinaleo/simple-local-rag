@@ -10,7 +10,10 @@ dependencies = [
     "djangorestframework>=3.15",
     "pgvector[django]>=0.5.0",
     "psycopg[binary]>=3.2",
+    "pypdf>=6.19.0",
+    "python-docx>=1.2.0",
     "python-dotenv>=1.0",
+    "sentence-transformers>=6.1.0",
 ]
 
 [dependency-groups]

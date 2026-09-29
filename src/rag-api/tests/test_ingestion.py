@@ -3,20 +3,10 @@
 import pytest
 
 from documents.models import Document, DocumentStatus
-from ingestion.tasks import _run_ingestion_pipeline, ingest_document
+from ingestion.tasks import ingest_document
+from tests.fakes import FakeEmbeddingModel
 
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture
-def document():
-    """Create a pending document to ingest."""
-    return Document.objects.create(
-        original_filename="sample.txt",
-        storage_path="uploads/sample.txt",
-        mime_type="text/plain",
-        size_bytes=42,
-    )
 
 
 @pytest.fixture
@@ -26,8 +16,22 @@ def eager_celery(settings):
     settings.CELERY_TASK_EAGER_PROPAGATES = True
 
 
-def test_ingest_document_reaches_indexed(eager_celery, document):
+@pytest.fixture
+def document(tmp_path):
+    """Create a pending document backed by a real stored file."""
+    stored = tmp_path / "sample.txt"
+    stored.write_text("Some knowledge base content.")
+    return Document.objects.create(
+        original_filename="sample.txt",
+        storage_path=str(stored),
+        mime_type="text/plain",
+        size_bytes=stored.stat().st_size,
+    )
+
+
+def test_ingest_document_reaches_indexed(eager_celery, document, monkeypatch):
     """A healthy document transitions processing then indexed."""
+    monkeypatch.setattr("ingestion.embedding.get_embedding_model", lambda: FakeEmbeddingModel())
     result = ingest_document.delay(document.pk)
 
     document.refresh_from_db()
@@ -54,8 +58,3 @@ def test_ingest_document_missing_document(eager_celery):
     """Ingesting an unknown id reports missing without crashing."""
     result = ingest_document.delay(999999)
     assert result.result == "missing"
-
-
-def test_pipeline_placeholder_is_a_noop(document):
-    """The pipeline placeholder succeeds so indexed is reachable."""
-    _run_ingestion_pipeline(document)

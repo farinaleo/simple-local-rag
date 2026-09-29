@@ -4,6 +4,7 @@
 
 ## Added
 
+- ✨(backend) add ingestion pipeline for txt pdf docx and md #29
 - ✨(backend) add celery redis ingestion worker #28
 - ✨(backend) add pgvector embedding column with hnsw index #26
 - 🐳(docker) add makefile with docker commands grouped by usage #27
