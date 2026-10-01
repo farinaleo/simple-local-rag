@@ -5,6 +5,7 @@
 ## Fixed
 
 - 🐛(backend) fix query view unpacking chunks as distance tuples #37
+- 🔥(docker) bake generation model into api image and log query failures #38
 
 ## Fixed
 
