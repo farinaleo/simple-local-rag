@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+## Changed
+- 🐛(backend) add accelerate dependency for model loading #36
+- 🔒(docker) make hf model download mandatory at image build #36
 
 ## Fixed
 
@@ -12,6 +15,8 @@
 - 🐳(docker) share uploads volume between api and worker containers #35
 
 ## Added
+
+- ✨(frontend) add chat page with streaming answers sources and history #36
 
 - ✨(frontend) add documents page with upload status and delete #34
 
