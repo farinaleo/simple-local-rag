@@ -17,11 +17,13 @@ COPY . .
 # HF_HOME must be declared BEFORE the download RUNs so the cache is
 # found; at runtime both api and worker run fully offline. The api
 # serves chat queries so it needs the generation model too.
+# The download is mandatory: a build without a model would ship an
+# image that silently fails at runtime once published.
 ENV HF_HOME=/opt/hf_cache
-RUN uv run python -c "from ingestion.embedding import get_embedding_model; get_embedding_model()" \
-    || echo "warning: embedding model not pre-downloaded (network unavailable)"
-RUN uv run python -c "from rag_core.generator import _load_generation_model; _load_generation_model()" \
-    || echo "warning: generation model not pre-downloaded (network unavailable)"
+RUN uv run python -c "from ingestion.embedding import get_embedding_model; get_embedding_model()"
+RUN uv run python -c "from rag_core.generator import _load_generation_model; _load_generation_model()"
+# Sanity check: fail the build if both models are not in the cache.
+RUN test "$(find /opt/hf_cache -name config.json -path '*snapshots*' | wc -l)" -ge 2
 
 ENV HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1

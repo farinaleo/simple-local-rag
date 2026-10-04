@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+## Changed
+- 🔒(docker) make hf model download mandatory at image build #36
 
 ## Fixed
 
