@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ## Changed
+- 🐛(backend) fix root env lookup crashing inside containers #39
 - ✨(config) gather all configuration in a single root env file #39
 - ✨(docker) add optional hf token build arg for model downloads #39
 - 🛠️(docker) serve api with gunicorn behind nginx reverse proxy #39

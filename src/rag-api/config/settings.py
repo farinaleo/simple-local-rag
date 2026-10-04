@@ -12,8 +12,14 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 # Single source of configuration: the repository root .env file,
-# also read by docker compose for interpolation.
-load_dotenv(Path(__file__).resolve().parents[3] / ".env")
+# also read by docker compose for interpolation. In containers the app
+# lives at /app, so the root only exists on a local checkout: walk the
+# parents and load the first .env found, if any.
+_ENV_PATH = next(
+    (parent / ".env" for parent in Path(__file__).resolve().parents if (parent / ".env").is_file()),
+    None,
+)
+load_dotenv(_ENV_PATH)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
