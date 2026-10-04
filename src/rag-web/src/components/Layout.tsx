@@ -20,7 +20,7 @@ export default function Layout() {
         <div className="absolute -bottom-40 right-1/4 h-96 w-96 rounded-full bg-fuchsia-600/15 blur-[128px]" />
       </div>
 
-      <div className="relative mx-auto flex max-w-5xl">
+      <div className="relative flex">
         <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-white/10 bg-zinc-900/40 p-5 backdrop-blur">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-lg shadow-lg shadow-violet-600/30">
@@ -62,7 +62,7 @@ export default function Layout() {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 p-8">
+        <main className="min-w-0 flex-1 p-6">
           <Outlet />
         </main>
       </div>
