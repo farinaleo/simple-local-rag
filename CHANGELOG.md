@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ## Changed
+- 🐛(backend) add accelerate dependency for model loading #36
 - 🔒(docker) make hf model download mandatory at image build #36
 
 ## Fixed
