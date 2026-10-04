@@ -4,32 +4,111 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, "ai/**"]
+    branches: [main, "ai/**", "vibe/**"]
 
 jobs:
-  lint:
-    name: Python style check (ruff)
+  backend-lint:
+    name: Backend lint (ruff)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: src/rag-api
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
           working-directory: src/rag-api
-
       - name: Install dependencies
         run: |
           uv python install $(cat .python-version)
           uv sync
-
       - name: Ruff lint
         run: uvx ruff check .
-
       - name: Ruff format check
         run: uvx ruff format --check .
+
+  backend-test:
+    name: Backend tests (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/rag-api
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rag
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d rag"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rag
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          working-directory: src/rag-api
+      - name: Install dependencies
+        run: |
+          uv python install $(cat .python-version)
+          uv sync
+      - name: Run tests
+        run: uv run pytest -q
+
+  frontend-lint:
+    name: Frontend lint (eslint + prettier)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/rag-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/rag-web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: ESLint
+        run: npm run lint
+      - name: Prettier check
+        run: npm run format:check
+      - name: TypeScript build
+        run: npm run build
+
+  frontend-test:
+    name: Frontend tests (vitest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/rag-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/rag-web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm run test
+
+  compose-config:
+    name: Compose config validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Validate compose file
+        run: docker compose config --quiet

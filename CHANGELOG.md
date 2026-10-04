@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ## Changed
+- ✨(CI) add complete ci pipeline with backend and frontend jobs #40
 - 🐛(docker) fix web healthcheck probing ipv6 localhost #39
 - 🐛(backend) fix root env lookup crashing inside containers #39
 - ✨(config) gather all configuration in a single root env file #39
