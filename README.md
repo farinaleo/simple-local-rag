@@ -167,8 +167,12 @@ flowchart TD
 ```bash
 make up            # or: docker compose up -d --build
 make migrate       # apply migrations (pgvector extension + HNSW index)
-make health        # curl http://localhost:8000/api/health/
+make health        # curl http://localhost:8080/api/health/
 ```
+
+Once the stack is up, the nginx reverse proxy is the single entrypoint:
+the SPA is served on `http://localhost:8080/` and proxies `/api/` to the
+Gunicorn-backed Django API.
 
 The root compose file points each service at its module's build context.
 
@@ -182,9 +186,9 @@ The root compose file points each service at its module's build context.
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2 — Configure and run the backend
+cp .env.example .env   # at the repository root
 cd src/rag-api
 uv sync
-cp .env.example .env
 uv run manage.py migrate
 uv run manage.py runserver
 ```
@@ -205,7 +209,7 @@ make down          # stop everything, keep the volumes
 ```
 
 <details>
-<summary><b>⚙️ Configuration reference</b> (all in <code>src/rag-api/.env</code>)</summary>
+<summary><b>⚙️ Configuration reference</b> (all in the root <code>.env</code>, see <code>.env.example</code>)</summary>
 
 | Variable | Default | Description |
 |---|---|---|

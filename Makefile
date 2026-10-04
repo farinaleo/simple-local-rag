@@ -76,8 +76,8 @@ check: ## Django system check
 	$(COMPOSE) exec api uv run manage.py check
 
 .PHONY: health
-health: ## Curl the api health endpoint
-	@curl -s http://localhost:8000/api/health/ && echo
+health: ## Curl the api health endpoint through the reverse proxy
+	@curl -s http://localhost:8080/api/health/ && echo
 
 # --- Admin --------------------------------------------------------------------
 

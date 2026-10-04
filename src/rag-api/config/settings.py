@@ -1,8 +1,8 @@
 """Django settings module driven by environment variables.
 
 Every deployment-specific value (debug flag, secret key, database URL)
-is read from the environment, with a `.env` file loaded as convenience
-defaults — real environment variables take precedence.
+is read from the environment, with the single root `.env` file loaded
+as convenience defaults — real environment variables take precedence.
 """
 
 import os
@@ -11,7 +11,15 @@ from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Single source of configuration: the repository root .env file,
+# also read by docker compose for interpolation. In containers the app
+# lives at /app, so the root only exists on a local checkout: walk the
+# parents and load the first .env found, if any.
+_ENV_PATH = next(
+    (parent / ".env" for parent in Path(__file__).resolve().parents if (parent / ".env").is_file()),
+    None,
+)
+load_dotenv(_ENV_PATH)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,7 +33,7 @@ CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/
 
 # CORS: the SPA dev server and the containerized web service.
 CORS_ALLOWED_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+    "CORS_ALLOWED_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080"
 ).split(",")
 
 # Parse DATABASE_URL into Django connection parameters (kept simple on

@@ -1,5 +1,4 @@
-# RAG API image: Django + DRF served by the development server for now.
-# A production WSGI server (Gunicorn) replaces it in the v2 deployment issue.
+# RAG API image: Django + DRF served by Gunicorn (v2 deployment).
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1
@@ -19,6 +18,11 @@ COPY . .
 # serves chat queries so it needs the generation model too.
 # The download is mandatory: a build without a model would ship an
 # image that silently fails at runtime once published.
+# Optional HF token for build-time downloads: authenticated requests get
+# higher rate limits and faster downloads. Pass with:
+#   HF_TOKEN=hf_xxx docker compose build
+# Never bake the value itself; ARG keeps it out of the final image env.
+ARG HF_TOKEN
 ENV HF_HOME=/opt/hf_cache
 RUN uv run python -c "from ingestion.embedding import get_embedding_model; get_embedding_model()"
 RUN uv run python -c "from rag_core.generator import _load_generation_model; _load_generation_model()"
@@ -30,4 +34,4 @@ ENV HF_HUB_OFFLINE=1 \
 
 EXPOSE 8000
 
-CMD ["uv", "run", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["uv", "run", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "600", "--access-logfile", "-"]
