@@ -11,7 +11,6 @@ import json
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from docx import Document as DocxDocument
-from pypdf import PdfWriter
 from rest_framework.test import APIClient
 
 from documents.models import Chunk, Document
@@ -32,12 +31,32 @@ CANNED_ANSWER = "Retrieval searches the closest chunks with a cosine distance."
 
 
 def _make_pdf(name="guide.pdf"):
-    """Build a minimal single-page PDF payload."""
-    writer = PdfWriter()
-    writer.add_blank_page(width=612, height=792)
+    """Build a minimal single-page PDF carrying real extractable text."""
+    stream = f"BT /F1 12 Tf 72 720 Td ({GUIDE_CONTENT}) Tj ET".encode("latin-1")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792]"
+            b" /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>"
+        ),
+        b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
     buffer = io.BytesIO()
-    writer.write(buffer)
-    buffer.seek(0)
+    buffer.write(b"%PDF-1.4\n")
+    offsets = []
+    for index, obj in enumerate(objects, start=1):
+        offsets.append(buffer.tell())
+        buffer.write(f"{index} 0 obj\n".encode() + obj + b"\nendobj\n")
+    xref = buffer.tell()
+    buffer.write(f"xref\n0 {len(objects) + 1}\n".encode())
+    buffer.write(b"0000000000 65535 f \n")
+    for offset in offsets:
+        buffer.write(f"{offset:010d} 00000 n \n".encode())
+    buffer.write(
+        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF".encode()
+    )
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="application/pdf")
 
 
