@@ -1,9 +1,11 @@
+# All runtime configuration comes from the single root .env file
+# (see .env.example); real environment variables take precedence.
 services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: rag-postgres
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: rag
     volumes:
       - rag_pgdata:/var/lib/postgresql/data
@@ -35,12 +37,12 @@ services:
         HF_TOKEN: ${HF_TOKEN:-}
     container_name: rag-api
     environment:
-      DEBUG: "true"
-      SECRET_KEY: dev-only
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag
+      DEBUG: ${DEBUG:-true}
+      SECRET_KEY: ${SECRET_KEY:-dev-only}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/rag
       CELERY_BROKER_URL: redis://redis:6379/0
       UPLOAD_DIR: /data/uploads
-      ALLOWED_HOSTS: localhost,127.0.0.1,api,nginx
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,api,nginx}
     volumes:
       # Uploaded files must be reachable by the worker too; a named volume
       # shared between api and worker makes the storage path consistent.
@@ -68,9 +70,9 @@ services:
     container_name: rag-worker
     command: uv run celery -A config worker --loglevel=info --concurrency=1
     environment:
-      DEBUG: "true"
-      SECRET_KEY: dev-only
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag
+      DEBUG: ${DEBUG:-true}
+      SECRET_KEY: ${SECRET_KEY:-dev-only}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/rag
       CELERY_BROKER_URL: redis://redis:6379/0
       UPLOAD_DIR: /data/uploads
     volumes:
