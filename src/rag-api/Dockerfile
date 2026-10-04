@@ -1,5 +1,4 @@
-# RAG API image: Django + DRF served by the development server for now.
-# A production WSGI server (Gunicorn) replaces it in the v2 deployment issue.
+# RAG API image: Django + DRF served by Gunicorn (v2 deployment).
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1
@@ -30,4 +29,4 @@ ENV HF_HUB_OFFLINE=1 \
 
 EXPOSE 8000
 
-CMD ["uv", "run", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["uv", "run", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "600", "--access-logfile", "-"]

@@ -167,8 +167,12 @@ flowchart TD
 ```bash
 make up            # or: docker compose up -d --build
 make migrate       # apply migrations (pgvector extension + HNSW index)
-make health        # curl http://localhost:8000/api/health/
+make health        # curl http://localhost:8080/api/health/
 ```
+
+Once the stack is up, the nginx reverse proxy is the single entrypoint:
+the SPA is served on `http://localhost:8080/` and proxies `/api/` to the
+Gunicorn-backed Django API.
 
 The root compose file points each service at its module's build context.
 

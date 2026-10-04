@@ -1,21 +1,14 @@
 services:
-  # Central orchestration: each service's build context points to its module,
-  # so module-specific needs (Dockerfile, deps) stay colocated with the logic.
-
   postgres:
-    # pgvector image: PostgreSQL with the vector extension available.
-    # Enabled per-database by the backend migrations.
     image: pgvector/pgvector:pg16
     container_name: rag-postgres
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: rag
     volumes:
-      # Named volume only — host bind mounts broke sqlite writes on the POC;
-      # same lesson applies to the database files.
       - rag_pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    networks:
+      - rag_backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d rag"]
       interval: 5s
@@ -23,11 +16,10 @@ services:
       retries: 10
 
   redis:
-    # Broker for the Celery ingestion worker.
     image: redis:7-alpine
     container_name: rag-redis
-    ports:
-      - "6379:6379"
+    networks:
+      - rag_backend
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -44,21 +36,27 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag
       CELERY_BROKER_URL: redis://redis:6379/0
       UPLOAD_DIR: /data/uploads
+      ALLOWED_HOSTS: localhost,127.0.0.1,api,nginx
     volumes:
       # Uploaded files must be reachable by the worker too; a named volume
       # shared between api and worker makes the storage path consistent.
       - rag_uploads:/data/uploads
-    ports:
-      - "8000:8000"
+    networks:
+      - rag_backend
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "uv run python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   worker:
     # Celery ingestion worker: same image as the api, celery entrypoint.
-    # The embedding model is baked into the image at build time.
     build:
       context: src/rag-api
     container_name: rag-worker
@@ -71,23 +69,60 @@ services:
       UPLOAD_DIR: /data/uploads
     volumes:
       - rag_uploads:/data/uploads
+    networks:
+      - rag_backend
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "uv run celery -A config inspect ping -d celery@$$(hostname) | grep -q OK"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   web:
     # React SPA: built in Docker, served by nginx (SPA routing fallback).
     build:
       context: src/rag-web
     container_name: rag-web
-    environment:
-      VITE_API_URL: http://localhost:8000
-    ports:
-      - "5173:80"
+    networks:
+      - rag_backend
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  nginx:
+    # Reverse proxy: single public entrypoint, / -> web, /api/ -> api.
+    image: nginx:alpine
+    container_name: rag-nginx
+    volumes:
+      - ./nginx/reverse-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    networks:
+      - rag_backend
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/api/health/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+networks:
+  rag_backend:
 
 volumes:
   rag_pgdata:

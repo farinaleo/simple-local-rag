@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ## Changed
+- 🛠️(docker) serve api with gunicorn behind nginx reverse proxy #39
 - 🐛(backend) add accelerate dependency for model loading #36
 - 🔒(docker) make hf model download mandatory at image build #36
 
