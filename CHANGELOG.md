@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 ## Changed
+- 🐛(backend) fix e2e pdf fixture carrying no extractable text #41
+- ✨(backend) add end-to-end test suite for the full pipeline #41
 - ✨(CI) add complete ci pipeline with backend and frontend jobs #40
 - 🐛(docker) fix web healthcheck probing ipv6 localhost #39
 - 🐛(backend) fix root env lookup crashing inside containers #39

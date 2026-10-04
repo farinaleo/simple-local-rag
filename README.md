@@ -247,6 +247,12 @@ Every pull request and push to `main` runs the full pipeline
 
 A failing lint, type check or test on either side blocks the merge.
 
+The backend test suite includes end-to-end scenarios (`tests/test_e2e.py`):
+upload → indexed for the four accepted formats, question → streamed
+answer citing the uploaded document, deletion → retrieval returns
+nothing, and re-upload → chunks replaced without duplicates. ML models
+are replaced by deterministic doubles so the suite runs fast and offline.
+
 ## 📝 Notes
 
 - `ENABLE_THINKING=false` + `MAX_NEW_TOKENS=512` = fast grounded QA; flip
