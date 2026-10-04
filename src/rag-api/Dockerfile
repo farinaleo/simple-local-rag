@@ -18,6 +18,11 @@ COPY . .
 # serves chat queries so it needs the generation model too.
 # The download is mandatory: a build without a model would ship an
 # image that silently fails at runtime once published.
+# Optional HF token for build-time downloads: authenticated requests get
+# higher rate limits and faster downloads. Pass with:
+#   HF_TOKEN=hf_xxx docker compose build
+# Never bake the value itself; ARG keeps it out of the final image env.
+ARG HF_TOKEN
 ENV HF_HOME=/opt/hf_cache
 RUN uv run python -c "from ingestion.embedding import get_embedding_model; get_embedding_model()"
 RUN uv run python -c "from rag_core.generator import _load_generation_model; _load_generation_model()"

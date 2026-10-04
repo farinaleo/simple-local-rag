@@ -29,6 +29,10 @@ services:
   api:
     build:
       context: src/rag-api
+      args:
+        # Optional: set HF_TOKEN in your shell or a root .env file for
+        # higher rate limits when downloading the models at build time.
+        HF_TOKEN: ${HF_TOKEN:-}
     container_name: rag-api
     environment:
       DEBUG: "true"
@@ -59,6 +63,8 @@ services:
     # Celery ingestion worker: same image as the api, celery entrypoint.
     build:
       context: src/rag-api
+      args:
+        HF_TOKEN: ${HF_TOKEN:-}
     container_name: rag-worker
     command: uv run celery -A config worker --loglevel=info --concurrency=1
     environment:
