@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ## Changed
+- 🐛(frontend) fix vite dev server missing api proxy #42
 - 🐛(backend) fix e2e pdf fixture carrying no extractable text #41
 - ✨(backend) add end-to-end test suite for the full pipeline #41
 - ✨(frontend) restyle app with sidebar layout and glassmorphism design #42
