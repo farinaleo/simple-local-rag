@@ -232,6 +232,21 @@ Real environment variables override `.env` values.
 
 ---
 
+## 🧪 CI matrix
+
+Every pull request and push to `main` runs the full pipeline
+(`.github/workflows/ci.yml`):
+
+| Job | What it runs |
+|---|---|
+| Backend lint (ruff) | `ruff check` + `ruff format --check` in `src/rag-api/` |
+| Backend tests (pytest) | `pytest` against a pgvector PostgreSQL service |
+| Frontend lint | ESLint, Prettier check and TypeScript build in `src/rag-web/` |
+| Frontend tests (vitest) | `vitest run` in `src/rag-web/` |
+| Compose config validation | `docker compose config` on the root compose file |
+
+A failing lint, type check or test on either side blocks the merge.
+
 ## 📝 Notes
 
 - `ENABLE_THINKING=false` + `MAX_NEW_TOKENS=512` = fast grounded QA; flip
