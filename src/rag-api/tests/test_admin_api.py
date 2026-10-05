@@ -69,18 +69,29 @@ def test_admin_resets_password():
 
 def test_admin_blocks_user_and_revokes_sessions():
     """Blocking sets is_active False and kills existing sessions."""
+    bob = _user("bob")
     _user("root", role=Role.ADMIN)
-    _user("bob")
-    _login("bob")
-    assert client.get("/api/auth/me/").status_code == 200
-    root_session = client.cookies.get("sessionid")
-    _login("root")
-    client.cookies["sessionid"] = root_session
-    response = client.patch("/api/auth/admin/users/2/", {"is_active": False}, format="json")
+    bob_client = APIClient()
+    bob_client.post(
+        "/api/auth/login/",
+        {"username": "bob", "password": "password123"},
+        format="json",
+    )
+    assert bob_client.get("/api/auth/me/").status_code == 200
+    admin_client = APIClient()
+    admin_client.post(
+        "/api/auth/login/",
+        {"username": "root", "password": "password123"},
+        format="json",
+    )
+    response = admin_client.patch(
+        f"/api/auth/admin/users/{bob.pk}/", {"is_active": False}, format="json"
+    )
     assert response.status_code == 200
     assert response.json()["is_active"] is False
-    bob = User.objects.get(username="bob")
+    bob.refresh_from_db()
     assert bob.is_active is False
+    assert bob_client.get("/api/auth/me/").status_code in (401, 403)
 
 
 def test_last_admin_cannot_be_blocked():
