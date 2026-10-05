@@ -89,16 +89,19 @@ def has_scope(request, scope):
 class TokenScopePermission(BasePermission):
     """Scope-aware permission for token-authenticated RAG endpoints.
 
-    Subclasses set ``required_scope``; session requests always pass.
+    Only Bearer-token requests are scope-limited; session and
+    anonymous requests keep the v3 behaviour (auth off by default,
+    anonymous access stays open).
     """
 
     required_scope = None
 
     def has_permission(self, request, view):
         """Return whether the caller carries the required scope."""
-        if request.user is None or not request.user.is_authenticated:
-            return False
-        return has_scope(request, self.required_scope)
+        token = _token_of(request)
+        if token is None:
+            return True
+        return token.has_scope(self.required_scope)
 
 
 class DocumentsReadPermission(TokenScopePermission):

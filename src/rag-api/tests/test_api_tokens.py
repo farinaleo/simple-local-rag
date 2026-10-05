@@ -23,10 +23,11 @@ def _make_token(user, scopes):
     return token, plaintext
 
 
-def _bearer_call(plaintext, method, path, **kwargs):
+def _bearer_call(plaintext, method, path, *args, **kwargs):
     """Call the API with a Bearer token on a fresh client."""
     token_client = APIClient()
-    return getattr(token_client, method)(path, HTTP_AUTHORIZATION=f"Bearer {plaintext}", **kwargs)
+    kwargs["HTTP_AUTHORIZATION"] = f"Bearer {plaintext}"
+    return getattr(token_client, method)(path, *args, **kwargs)
 
 
 def test_create_returns_plaintext_once_and_hashes_it():
