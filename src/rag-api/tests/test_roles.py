@@ -84,12 +84,34 @@ def test_last_admin_cannot_be_demoted():
 
 
 def test_last_admin_cannot_be_deleted():
-    """The last admin cannot be deleted, even by themselves."""
+    """An admin account cannot be deleted via role management."""
     admin = _user("root", role=Role.ADMIN)
     _login("root")
     response = client.delete(f"/api/auth/users/{admin.pk}/")
     assert response.status_code == 400
     assert "last admin" in response.json()["detail"]
+
+
+def test_admin_accounts_protected_from_admin_management():
+    """Blocking, resetting or deleting an admin is refused, self included."""
+    _user("root", role=Role.ADMIN)
+    other_admin = _user("chief", role=Role.ADMIN)
+    _login("root")
+    for payload in ({"is_active": False}, {"reset_password": True}):
+        response = client.patch(f"/api/auth/admin/users/{other_admin.pk}/", payload, format="json")
+        assert response.status_code == 400
+    response = client.delete(f"/api/auth/admin/users/{other_admin.pk}/")
+    assert response.status_code == 400
+
+
+def test_admin_cannot_reset_own_password_via_admin_api():
+    """An admin changes their password only through the profile page."""
+    admin = _user("root", role=Role.ADMIN)
+    _login("root")
+    response = client.patch(
+        f"/api/auth/admin/users/{admin.pk}/", {"reset_password": True}, format="json"
+    )
+    assert response.status_code == 400
 
 
 def test_admin_can_delete_user():

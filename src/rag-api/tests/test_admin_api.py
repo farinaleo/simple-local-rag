@@ -95,14 +95,14 @@ def test_admin_blocks_user_and_revokes_sessions():
 
 
 def test_last_admin_cannot_be_blocked():
-    """The last admin cannot be blocked."""
+    """An admin account cannot be blocked via the admin API."""
     admin = _user("root", role=Role.ADMIN)
     _login("root")
     response = client.patch(
         f"/api/auth/admin/users/{admin.pk}/", {"is_active": False}, format="json"
     )
     assert response.status_code == 400
-    assert "last admin" in response.json()["detail"]
+    assert "profile page" in response.json()["detail"]
 
 
 def test_change_password_clears_flag():

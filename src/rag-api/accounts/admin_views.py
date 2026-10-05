@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import Profile, Role
-from accounts.permissions import IsAdmin, other_admins_excluding
+from accounts.permissions import IsAdmin
 
 TEMP_PASSWORD_ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
@@ -102,11 +102,14 @@ class AdminUserDetailView(APIView):
         if user is None:
             return Response({"detail": "user not found"}, status=404)
         profile, _ = Profile.objects.get_or_create(user=user)
+        if profile.role == Role.ADMIN:
+            return Response(
+                {"detail": "admin accounts are managed through the profile page"},
+                status=400,
+            )
         payload = {}
         if "is_active" in request.data:
             new_active = bool(request.data["is_active"])
-            if not new_active and profile.role == Role.ADMIN and other_admins_excluding(user) == 0:
-                return Response({"detail": "cannot block the last admin"}, status=400)
             user.is_active = new_active
             user.save(update_fields=["is_active"])
             if not new_active:
@@ -136,8 +139,11 @@ class AdminUserDetailView(APIView):
         if user is None:
             return Response({"detail": "user not found"}, status=404)
         profile, _ = Profile.objects.get_or_create(user=user)
-        if profile.role == Role.ADMIN and other_admins_excluding(user) == 0:
-            return Response({"detail": "cannot delete the last admin"}, status=400)
+        if profile.role == Role.ADMIN:
+            return Response(
+                {"detail": "admin accounts are managed through the profile page"},
+                status=400,
+            )
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

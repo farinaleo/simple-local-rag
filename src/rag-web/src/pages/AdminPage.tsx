@@ -150,44 +150,50 @@ function AdminPage() {
                 {user.must_change_password && ' · mot de passe temporaire'}
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-lg text-zinc-400 hover:bg-white/10 hover:text-zinc-100"
-              onClick={() =>
-                updateUser
-                  .mutateAsync({ id: user.id, reset_password: true })
-                  .then((result) =>
-                    toast.success(`Nouveau mot de passe temporaire : ${result.temporary_password}`),
-                  )
-                  .catch((error) => toast.error(error.message))
-              }
-            >
-              Réinitialiser
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-lg text-zinc-400 hover:bg-amber-500/15 hover:text-amber-300"
-              onClick={() =>
-                updateUser
-                  .mutateAsync({ id: user.id, is_active: !user.is_active })
-                  .catch((error) => toast.error(error.message))
-              }
-            >
-              {user.is_active ? 'Bloquer' : 'Débloquer'}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-lg text-zinc-400 hover:bg-red-500/15 hover:text-red-400"
-              onClick={() => {
-                if (!window.confirm(`Supprimer le compte ${user.username} ?`)) return
-                deleteUser.mutateAsync(user.id).catch((error) => toast.error(error.message))
-              }}
-            >
-              Supprimer
-            </Button>
+            {user.role !== 'admin' && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-lg text-zinc-400 hover:bg-white/10 hover:text-zinc-100"
+                  onClick={() =>
+                    updateUser
+                      .mutateAsync({ id: user.id, reset_password: true })
+                      .then((result) =>
+                        toast.success(
+                          `Nouveau mot de passe temporaire : ${result.temporary_password}`,
+                        ),
+                      )
+                      .catch((error) => toast.error(error.message))
+                  }
+                >
+                  Réinitialiser
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-lg text-zinc-400 hover:bg-amber-500/15 hover:text-amber-300"
+                  onClick={() =>
+                    updateUser
+                      .mutateAsync({ id: user.id, is_active: !user.is_active })
+                      .catch((error) => toast.error(error.message))
+                  }
+                >
+                  {user.is_active ? 'Bloquer' : 'Débloquer'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-lg text-zinc-400 hover:bg-red-500/15 hover:text-red-400"
+                  onClick={() => {
+                    if (!window.confirm(`Supprimer le compte ${user.username} ?`)) return
+                    deleteUser.mutateAsync(user.id).catch((error) => toast.error(error.message))
+                  }}
+                >
+                  Supprimer
+                </Button>
+              </>
+            )}
           </motion.div>
         ))}
       </div>
