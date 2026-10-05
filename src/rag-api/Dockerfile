@@ -1,6 +1,11 @@
 # RAG API image: Django + DRF served by Gunicorn (v2 deployment).
 FROM python:3.12-slim
 
+# Tesseract powers the OCR extraction of image documents (v3).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app

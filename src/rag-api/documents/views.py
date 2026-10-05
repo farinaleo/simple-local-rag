@@ -12,7 +12,7 @@ from documents.models import Document, DocumentVisibility
 from documents.serializers import DocumentDetailSerializer, DocumentSerializer
 from ingestion.tasks import ingest_document
 
-ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx"}
+ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx", ".png", ".jpg", ".jpeg"}
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 

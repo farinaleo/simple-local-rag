@@ -22,6 +22,8 @@ const ACCEPTED_EXTENSIONS = {
   'text/markdown': ['.md'],
   'application/pdf': ['.pdf'],
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'image/png': ['.png'],
+  'image/jpeg': ['.jpg', '.jpeg'],
 }
 
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -143,7 +145,7 @@ export default function DocumentsPage() {
             <input {...getInputProps()} />
             {isDragActive
               ? 'Déposez les fichiers ici…'
-              : '📂 Glissez-déposez des fichiers ici, ou cliquez pour sélectionner — txt, md, pdf, docx (max 50 Mo)'}
+              : '📂 Glissez-déposez des fichiers ici, ou cliquez pour sélectionner — txt, md, pdf, docx, png, jpg (max 50 Mo)'}
           </div>
         </motion.div>
 

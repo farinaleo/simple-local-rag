@@ -2,14 +2,15 @@
 
 from pathlib import Path
 
-ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx"}
+ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx", ".png", ".jpg", ".jpeg"}
 
 
 def extract_text(file_path):
     """Extract the plain text of a document file.
 
     Dispatches by extension: native read for `.txt` / `.md` (markdown
-    stripped to plain text), `pypdf` for PDF, `python-docx` for DOCX.
+    stripped to plain text), `pypdf` for PDF, `python-docx` for DOCX,
+    Tesseract OCR for images (png, jpg).
 
     Args:
         file_path: Path of the file to extract.
@@ -28,6 +29,8 @@ def extract_text(file_path):
         return _extract_pdf(file_path)
     if extension == ".docx":
         return _extract_docx(file_path)
+    if extension in {".png", ".jpg", ".jpeg"}:
+        return _extract_image(file_path)
 
     text = Path(file_path).read_text(encoding="utf-8")
     if extension == ".md":
@@ -63,6 +66,28 @@ def _extract_docx(file_path):
 
     document = Document(file_path)
     return "\n".join(paragraph.text for paragraph in document.paragraphs)
+
+
+def _extract_image(file_path):
+    """Extract the text of an image file via Tesseract OCR.
+
+    Args:
+        file_path: Path of the image file (png, jpg, jpeg).
+
+    Returns:
+        The recognized text; empty string when nothing is readable.
+
+    Raises:
+        ValueError: If Tesseract is not installed on the worker.
+    """
+    import pytesseract
+    from PIL import Image
+
+    try:
+        with Image.open(file_path) as image:
+            return pytesseract.image_to_string(image).strip()
+    except pytesseract.TesseractNotFoundError as error:
+        raise ValueError("tesseract is not installed on the worker") from error
 
 
 def _markdown_to_plain_text(markdown_text):
