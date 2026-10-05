@@ -5,6 +5,7 @@
 - 🐛(docker) fix nginx proxying to stale container ips #51
 
 ## Added
+- ✨(backend) add admin oversight of all user api tokens #59
 - ✨(frontend) add user profile page with avatar and token management #57
 - ✨(backend) add self-service api tokens with scopes and throttle #56
 - ✨(frontend) add admin ui with temporary passwords and user blocking #55
