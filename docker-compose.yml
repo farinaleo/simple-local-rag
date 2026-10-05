@@ -43,6 +43,8 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       UPLOAD_DIR: /data/uploads
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,api,nginx}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     volumes:
       # Uploaded files must be reachable by the worker too; a named volume
       # shared between api and worker makes the storage path consistent.
@@ -75,6 +77,8 @@ services:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/rag
       CELERY_BROKER_URL: redis://redis:6379/0
       UPLOAD_DIR: /data/uploads
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     volumes:
       - rag_uploads:/data/uploads
     networks:
