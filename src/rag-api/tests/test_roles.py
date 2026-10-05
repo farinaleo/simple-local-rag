@@ -14,7 +14,7 @@ client = APIClient()
 def _user(username, role=Role.USER, password="password123"):
     """Create a user with the given role and return it."""
     user = User.objects.create_user(username=username, password=password)
-    Profile.objects.create(user=user, role=role)
+    Profile.objects.update_or_create(user=user, defaults={"role": role})
     return user
 
 
@@ -113,7 +113,9 @@ def test_invalid_role_rejected():
 
 def test_bootstrap_migration_creates_admin(monkeypatch):
     """The bootstrap function creates the admin from env variables."""
-    from accounts.migrations import _bootstrap_admin as bootstrap_admin
+    from importlib import import_module
+
+    bootstrap_admin = import_module("accounts.migrations.0002_bootstrap_admin")._bootstrap_admin
 
     monkeypatch.setenv("ADMIN_USERNAME", "bootstrap-admin")
     monkeypatch.setenv("ADMIN_PASSWORD", "bootstrap-pass-123")
