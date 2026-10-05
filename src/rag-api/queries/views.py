@@ -9,6 +9,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.token_auth import QueryPermission
 from documents.models import Query
 from queries.serializers import QuerySerializer
 from rag_core.generator import generate_answer
@@ -19,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 class QueryView(APIView):
     """Answer a question with Server-Sent Events streaming."""
+
+    permission_classes = [QueryPermission]
 
     def post(self, request):
         """Stream a grounded answer, then persist it with its sources.

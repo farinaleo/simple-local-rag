@@ -3,6 +3,7 @@
 from django.urls import path
 
 from accounts.admin_views import AdminUserDetailView, AdminUserListView, ChangePasswordView
+from accounts.token_views import TokenDetailView, TokenListView
 from accounts.views import (
     LoginView,
     LogoutView,
@@ -22,4 +23,6 @@ urlpatterns = [
     path("users/<int:user_id>/", UserRoleView.as_view(), name="user-role"),
     path("admin/users/", AdminUserListView.as_view(), name="admin-users"),
     path("admin/users/<int:user_id>/", AdminUserDetailView.as_view(), name="admin-user"),
+    path("tokens/", TokenListView.as_view(), name="tokens"),
+    path("tokens/<int:token_id>/", TokenDetailView.as_view(), name="token-detail"),
 ]
