@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+## Fixed
+- 🐛(docker) fix nginx proxying to stale container ips #51
+
 ## Added
 - ✨(backend) add ocr ingestion for image documents #49
 
