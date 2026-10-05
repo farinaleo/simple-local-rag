@@ -116,12 +116,21 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "accounts.token_auth.BearerTokenAuthentication",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.ScopedRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
         "auth": "10/min",
     },
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Simple Local RAG API",
+    "DESCRIPTION": "RAG API for documents and chat answers. External clients "
+    "authenticate with a Bearer token created on the profile page.",
+    "VERSION": "4.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 LANGUAGE_CODE = "en-us"

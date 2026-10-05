@@ -1,0 +1,88 @@
+"""External API surface tests: OpenAPI schema, docs, bearer flow."""
+
+import json
+
+import pytest
+from django.contrib.auth.models import User
+from rest_framework.test import APIClient
+
+from accounts.models import Profile
+from accounts.token_models import ApiToken, generate_token
+from tests.fakes import FakeEmbeddingModel
+
+pytestmark = pytest.mark.django_db
+
+client = APIClient()
+
+
+def test_schema_covers_documents_and_query_endpoints():
+    """The OpenAPI schema lists the documents and query endpoints."""
+    response = client.get("/api/schema/")
+    assert response.status_code == 200
+    schema = response.json()
+    assert "/api/documents/" in schema["paths"]
+    assert "/api/documents/{id}/" in schema["paths"]
+    assert "/api/query/" in schema["paths"]
+
+
+def test_docs_page_renders():
+    """The browsable documentation page renders."""
+    response = client.get("/api/docs/")
+    assert response.status_code == 200
+    assert b"/api/schema/" in response.content
+
+
+@pytest.fixture(autouse=True)
+def eager_celery(settings, monkeypatch, tmp_path):
+    """Run ingestion inline and write uploads to a temporary directory."""
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    settings.CELERY_TASK_EAGER_PROPAGATES = True
+    monkeypatch.setattr("ingestion.embedding.get_embedding_model", lambda: FakeEmbeddingModel())
+    monkeypatch.setenv("UPLOAD_DIR", str(tmp_path / "uploads"))
+
+
+def test_bearer_flow_upload_then_query(monkeypatch):
+    """An external client runs the full flow: token -> upload -> query."""
+    user = User.objects.create_user(username="leo", password="password123")
+    Profile.objects.update_or_create(user=user, defaults={"role": "user"})
+    plaintext, token_hash = generate_token()
+    ApiToken.objects.create(
+        user=user,
+        name="cli",
+        token_hash=token_hash,
+        scopes=["documents:read", "documents:write", "query"],
+    )
+    token_client = APIClient()
+    headers = {"HTTP_AUTHORIZATION": f"Bearer {plaintext}"}
+
+    listing = token_client.get("/api/documents/", **headers)
+    assert listing.status_code == 200
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    upload = token_client.post(
+        "/api/documents/",
+        {"file": SimpleUploadedFile("kb.txt", b"The tower is tall.", "text/plain")},
+        format="multipart",
+        **headers,
+    )
+    assert upload.status_code == 202
+
+    monkeypatch.setattr(
+        "queries.views.generate_answer",
+        lambda question, texts: ("", "The tower is tall and made of iron."),
+    )
+    query = token_client.post(
+        "/api/query/",
+        {"question": "How tall?"},
+        format="json",
+        **headers,
+    )
+    assert query.status_code == 200
+    assert query["Content-Type"].startswith("text/event-stream")
+    tokens = []
+    for part in query.streaming_content:
+        for block in part.decode().split("\n\n"):
+            if block.startswith("event: token"):
+                tokens.append(json.loads(block.splitlines()[1].removeprefix("data: ")))
+    assert "".join(entry["text"] for entry in tokens).strip() != ""
