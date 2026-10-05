@@ -270,3 +270,35 @@ export function useDeleteToken() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tokens'] }),
   })
 }
+
+export interface AdminTokenData extends TokenData {
+  user: string
+}
+
+export function useAdminTokens(enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-tokens'],
+    queryFn: () => adminFetch('/admin/tokens/') as Promise<AdminTokenData[]>,
+    enabled,
+  })
+}
+
+export function useUpdateAdminToken() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...payload }: { id: number; is_active?: boolean }) =>
+      adminFetch(`/admin/tokens/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-tokens'] }),
+  })
+}
+
+export function useDeleteAdminToken() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => adminFetch(`/admin/tokens/${id}/`, { method: 'DELETE' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-tokens'] }),
+  })
+}
