@@ -132,7 +132,6 @@ SPECTACULAR_SETTINGS = {
     "authenticate with a Bearer token created on the profile page.",
     "VERSION": "4.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "SERVE_FORMAT": "json",
 }
 
 LANGUAGE_CODE = "en-us"

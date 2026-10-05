@@ -17,7 +17,7 @@ client = APIClient()
 
 def test_schema_covers_documents_and_query_endpoints():
     """The OpenAPI schema lists the documents and query endpoints."""
-    response = client.get("/api/schema/")
+    response = client.get("/api/schema/", HTTP_ACCEPT="application/json")
     assert response.status_code == 200
     schema = response.json()
     assert "/api/documents/" in schema["paths"]
