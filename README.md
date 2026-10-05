@@ -270,6 +270,12 @@ defaults to `auto`, which falls back to CPU when no GPU is visible).
   the default setup.
 ---
 
+## 📐 ADRs
+
+Architecture decisions are recorded in [`docs/benchmarks/`](docs/benchmarks/)
+(lightweight ADR-style notes). Current: [pgvector vs Qdrant](docs/benchmarks/vector_search.md)
+(decision: keep pgvector for v3, with explicit migration thresholds).
+
 ## 🧪 CI matrix
 
 Every pull request and push to `main` runs the full pipeline
