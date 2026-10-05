@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from '@/components/Layout'
 import { useSession } from '@/hooks/auth'
+import AccountPage from '@/pages/AccountPage'
 import AdminPage from '@/pages/AdminPage'
 import ChangePasswordPage from '@/pages/ChangePasswordPage'
 import ChatPage from '@/pages/ChatPage'
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/" element={<DocumentsPage />} />
         <Route path="/documents" element={<DocumentsPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/account" element={<AccountPage />} />
         <Route
           path="/admin"
           element={

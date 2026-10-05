@@ -2,7 +2,8 @@
 
 from django.urls import path
 
-from accounts.admin_views import AdminUserDetailView, AdminUserListView, ChangePasswordView
+from accounts.admin_views import AdminUserDetailView, AdminUserListView
+from accounts.profile_views import ChangePasswordView, ProfileView
 from accounts.token_views import TokenDetailView, TokenListView
 from accounts.views import (
     LoginView,
@@ -18,6 +19,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("me/", MeView.as_view(), name="me"),
+    path("profile/", ProfileView.as_view(), name="profile"),
     path("password/", ChangePasswordView.as_view(), name="change-password"),
     path("users/", UserListView.as_view(), name="users"),
     path("users/<int:user_id>/", UserRoleView.as_view(), name="user-role"),

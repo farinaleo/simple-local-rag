@@ -8,12 +8,17 @@ const navItems = [
   { to: '/documents', label: 'Documents', icon: '📄' },
   { to: '/chat', label: 'Chats', icon: '💬' },
 ]
+const accountNavItems = [{ to: '/account', label: 'Mon compte', icon: '👤' }]
 const adminNavItems = [{ to: '/admin', label: 'Administration', icon: '🛡️' }]
 
 export default function Layout() {
   const { data: documents } = useDocuments()
   const { data: session } = useSession()
-  const items = session?.role === 'admin' ? [...navItems, ...adminNavItems] : navItems
+  const items = [
+    ...navItems,
+    ...accountNavItems,
+    ...(session?.role === 'admin' ? adminNavItems : []),
+  ]
   const logout = useLogout()
   const navigate = useNavigate()
   const indexedCount = (documents ?? []).filter((d) => d.status === 'indexed').length
