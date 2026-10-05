@@ -225,11 +225,39 @@ make down          # stop everything, keep the volumes
 | `CHUNK_SIZE` | `500` | Max characters per chunk |
 | `MAX_NEW_TOKENS` | `512` | Generation budget |
 | `ENABLE_THINKING` | `false` | Qwen3 thinking mode |
+| `RAG_DEVICE` | `auto` | Inference device: `auto`, `cpu` or `cuda` |
 
 Real environment variables override `.env` values.
 
 </details>
 
+
+### 🖥️ GPU acceleration
+
+The same codebase and image run CPU-only or GPU-accelerated; the torch
+wheels shipped from PyPI already bundle the CUDA runtime, so only the
+device selection and the GPU reservation change.
+
+1. Install the
+   [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+   on the host (Docker restart required).
+2. Start with the GPU overlay:
+
+   ```bash
+   docker compose -f docker-compose.yml -f compose.gpu.yml up
+   ```
+
+   The overlay sets `RAG_DEVICE=cuda` and reserves one NVIDIA GPU for
+   both `api` and `worker` (embeddings and generation).
+3. Verify from inside the container:
+
+   ```bash
+   docker compose exec api uv run python -c "import torch; print(torch.cuda.is_available())"
+   ```
+
+Switch back to CPU by starting without the overlay (`RAG_DEVICE`
+defaults to `auto`, which falls back to CPU when no GPU is visible).
+`make rebuild` keeps working unchanged for the CPU setup.
 ---
 
 ## 🧪 CI matrix
@@ -257,8 +285,8 @@ are replaced by deterministic doubles so the suite runs fast and offline.
 
 - `ENABLE_THINKING=false` + `MAX_NEW_TOKENS=512` = fast grounded QA; flip
   both for reasoning-heavy use cases.
-- The pyproject pins **CPU torch** via uv's `pytorch-cpu` index — swap for a
-  CUDA index when building with a GPU.
+- GPU inference needs no code change: start with `compose.gpu.yml` (see
+  the GPU acceleration section above).
 - Need multi-user serving or heavy metadata filtering? See the v3 roadmap
   (dedicated vector DB evaluation).
 
