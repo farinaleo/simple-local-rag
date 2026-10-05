@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.token_auth import DocumentsReadPermission, DocumentsWritePermission
 from documents.models import Document, DocumentVisibility
 from documents.serializers import DocumentDetailSerializer, DocumentSerializer
 from ingestion.tasks import ingest_document
@@ -18,6 +19,12 @@ MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 class DocumentListCreateView(APIView):
     """List documents and handle asynchronous multipart uploads."""
+
+    def get_permissions(self):
+        """Scope-aware permissions: read to list, write to upload."""
+        if self.request.method == "POST":
+            return [DocumentsWritePermission()]
+        return [DocumentsReadPermission()]
 
     def get(self, request):
         """Return the documents the user can read, newest first."""
@@ -104,6 +111,12 @@ def _readable_documents(user):
 
 class DocumentDetailView(APIView):
     """Detail and atomic deletion of a single document."""
+
+    def get_permissions(self):
+        """Scope-aware permissions: read to view, write to delete."""
+        if self.request.method == "DELETE":
+            return [DocumentsWritePermission()]
+        return [DocumentsReadPermission()]
 
     def get(self, request, pk):
         """Return a document including its chunks.
