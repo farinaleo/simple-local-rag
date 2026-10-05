@@ -17,6 +17,8 @@ class Profile(models.Model):
     Attributes:
         user: The linked Django user (one-to-one, cascade on delete).
         role: The account tier, ``admin`` or ``user`` (default ``user``).
+        must_change_password: Whether the next login must redirect to
+            the password-change screen (temporary passwords).
 
     """
 
@@ -24,6 +26,7 @@ class Profile(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
     )
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.USER)
+    must_change_password = models.BooleanField(default=False)
 
     class Meta:
         """Meta options for the profile model."""
