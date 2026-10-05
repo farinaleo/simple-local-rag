@@ -2,6 +2,7 @@
 
 from django.utils import timezone
 from rest_framework.authentication import BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import BasePermission
 
 from accounts.token_models import ApiToken
@@ -42,10 +43,8 @@ class BearerTokenAuthentication(BaseAuthentication):
             .filter(token_hash=hash_token(plaintext))
             .first()
         )
-        if token is None or not token.usable:
-            return None
-        if not token.user.is_active:
-            return None
+        if token is None or not token.usable or not token.user.is_active:
+            raise AuthenticationFailed("invalid or inactive token")
         token.last_used_at = timezone.now()
         token.save(update_fields=["last_used_at"])
         return (token.user, token)
