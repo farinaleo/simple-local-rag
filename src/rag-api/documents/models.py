@@ -25,8 +25,28 @@ class DocumentStatus(models.TextChoices):
     FAILED = "failed", "Failed"
 
 
+class DocumentVisibility(models.TextChoices):
+    """Who can read a document besides its owner."""
+
+    PRIVATE = "private", "Private"
+    SHARED = "shared", "Shared"
+
+
 class Document(models.Model):
     """An uploaded knowledge-base file tracked through ingestion."""
+
+    owner = models.ForeignKey(
+        "auth.User",
+        on_delete=models.CASCADE,
+        related_name="documents",
+        null=True,
+        blank=True,
+    )
+    visibility = models.CharField(
+        max_length=16,
+        choices=DocumentVisibility.choices,
+        default=DocumentVisibility.PRIVATE,
+    )
 
     original_filename = models.CharField(max_length=255)
     storage_path = models.CharField(max_length=512)
@@ -42,6 +62,20 @@ class Document(models.Model):
     def __str__(self):
         """Return the filename for admin and logs readability."""
         return self.original_filename
+
+    def is_readable_by(self, user):
+        """Whether a user can read this document.
+
+        Args:
+            user: The user to check access for.
+
+        Returns:
+            True for the owner, shared documents and anonymous access
+            (session auth disabled), False for other private documents.
+        """
+        if user is None or not user.is_authenticated:
+            return True
+        return self.visibility == DocumentVisibility.SHARED or self.owner_id == user.pk
 
     def mark_processing(self):
         """Set the status to processing, starting the ingestion transition."""
@@ -88,6 +122,14 @@ class Chunk(models.Model):
 
 class Query(models.Model):
     """A past exchange powering the chat history feature."""
+
+    user = models.ForeignKey(
+        "auth.User",
+        on_delete=models.CASCADE,
+        related_name="queries",
+        null=True,
+        blank=True,
+    )
 
     question = models.TextField()
     answer = models.TextField()

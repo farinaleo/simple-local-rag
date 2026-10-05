@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
+import { useLogout, useSession } from '@/hooks/auth'
 import { useDocuments } from '@/hooks/documents'
 
 const navItems = [
@@ -10,6 +11,9 @@ const navItems = [
 
 export default function Layout() {
   const { data: documents } = useDocuments()
+  const { data: session } = useSession()
+  const logout = useLogout()
+  const navigate = useNavigate()
   const indexedCount = (documents ?? []).filter((d) => d.status === 'indexed').length
 
   return (
@@ -51,14 +55,37 @@ export default function Layout() {
             ))}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-3.5">
-            <p className="text-[11px] leading-relaxed text-zinc-400">
-              <span className="font-semibold text-zinc-200">
-                {indexedCount} fichier{indexedCount > 1 ? 's' : ''}
-              </span>{' '}
-              indexé{indexedCount > 1 ? 's' : ''} dans votre base. Vos conversations s'appuient sur
-              ces documents.
-            </p>
+          <div className="mt-auto space-y-2">
+            {session && (
+              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xs font-bold uppercase text-white">
+                  {session.username.slice(0, 2)}
+                </div>
+                <p className="min-w-0 flex-1 truncate text-xs font-medium text-zinc-200">
+                  {session.username}
+                </p>
+                <button
+                  type="button"
+                  className="text-xs text-zinc-400 transition-colors hover:text-red-400"
+                  onClick={() =>
+                    logout.mutate(undefined, {
+                      onSuccess: () => navigate('/login'),
+                    })
+                  }
+                >
+                  Quitter
+                </button>
+              </div>
+            )}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
+              <p className="text-[11px] leading-relaxed text-zinc-400">
+                <span className="font-semibold text-zinc-200">
+                  {indexedCount} fichier{indexedCount > 1 ? 's' : ''}
+                </span>{' '}
+                indexé{indexedCount > 1 ? 's' : ''} dans votre base. Vos conversations s'appuient
+                sur ces documents.
+              </p>
+            </div>
           </div>
         </aside>
 

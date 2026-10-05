@@ -46,6 +46,7 @@ _db_host = _url.hostname or "localhost"
 _db_port = str(_url.port or 5432)
 
 INSTALLED_APPS = [
+    "accounts",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -101,9 +102,18 @@ DATABASES = {
     }
 }
 
+# Same-origin behind the nginx reverse proxy: the SPA is served on the
+# same host as the API, so cookies flow without CORS friction.
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    "CSRF_TRUSTED_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080"
+).split(",")
+
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
     ],
 }
 

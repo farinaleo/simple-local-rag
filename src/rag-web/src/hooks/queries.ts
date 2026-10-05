@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
-import { API_BASE_URL } from '@/api'
+import { API_BASE_URL, getCsrfToken } from '@/api'
 import type { QueryHistoryItem, QuerySource, StreamEvent } from '@/types'
 
 export function useQueryHistory() {
   return useQuery<QueryHistoryItem[]>({
     queryKey: ['query-history'],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/query/history/`)
+      const response = await fetch(`${API_BASE_URL}/api/query/history/`, {
+        credentials: 'include',
+      })
       if (!response.ok) throw new Error('Failed to load history')
       return response.json()
     },
@@ -36,8 +38,12 @@ export async function streamQuery(
   onEvent: (event: StreamEvent) => void,
 ): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/query/`, {
+    credentials: 'include',
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCsrfToken(),
+    },
     body: JSON.stringify({ question }),
   })
   if (!response.ok || !response.body) {
