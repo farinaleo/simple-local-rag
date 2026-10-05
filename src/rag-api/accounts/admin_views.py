@@ -9,6 +9,9 @@ from rest_framework.views import APIView
 
 from accounts.models import Profile, Role
 from accounts.permissions import IsAdmin
+from accounts.token_auth import BearerTokenAuthentication
+from accounts.token_models import ApiToken
+from accounts.token_views import TOKEN_AUTH_FORBIDDEN, _token_payload
 
 TEMP_PASSWORD_ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
@@ -166,3 +169,62 @@ def _revoke_sessions(user):
             session.delete()
             count += 1
     return count
+
+
+class AdminTokenListView(APIView):
+    """Admin-only listing of every API token across all accounts."""
+
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        """List all tokens with their owner, never exposing the hash."""
+        if isinstance(request.successful_authenticator, BearerTokenAuthentication):
+            return Response({"detail": TOKEN_AUTH_FORBIDDEN}, status=400)
+        tokens = ApiToken.objects.select_related("user").order_by("id")
+        return Response(
+            [{**_token_payload(token), "user": token.user.username} for token in tokens]
+        )
+
+
+class AdminTokenDetailView(APIView):
+    """Admin-only per-token management: pause, resume, revoke."""
+
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, token_id):
+        """Pause or resume any user's token.
+
+        Args:
+            request: The JSON request with ``is_active``.
+            token_id: The id of the managed token.
+
+        Returns:
+            200 with the updated token, 404 when the token does not exist.
+        """
+        if isinstance(request.successful_authenticator, BearerTokenAuthentication):
+            return Response({"detail": TOKEN_AUTH_FORBIDDEN}, status=400)
+        token = ApiToken.objects.filter(pk=token_id).first()
+        if token is None:
+            return Response({"detail": "token not found"}, status=404)
+        if "is_active" in request.data:
+            token.is_active = bool(request.data["is_active"])
+            token.save(update_fields=["is_active"])
+        return Response(_token_payload(token))
+
+    def delete(self, request, token_id):
+        """Revoke any user's token permanently.
+
+        Args:
+            request: The deletion request.
+            token_id: The id of the revoked token.
+
+        Returns:
+            204 on success, 404 when the token does not exist.
+        """
+        if isinstance(request.successful_authenticator, BearerTokenAuthentication):
+            return Response({"detail": TOKEN_AUTH_FORBIDDEN}, status=400)
+        token = ApiToken.objects.filter(pk=token_id).first()
+        if token is None:
+            return Response({"detail": "token not found"}, status=404)
+        token.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

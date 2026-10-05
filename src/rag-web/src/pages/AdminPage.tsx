@@ -4,10 +4,13 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  useAdminTokens,
   useAdminUsers,
   useChangePassword,
   useCreateAdminUser,
+  useDeleteAdminToken,
   useDeleteAdminUser,
+  useUpdateAdminToken,
   useUpdateAdminUser,
 } from '@/hooks/auth'
 import { useSession } from '@/hooks/auth'
@@ -19,6 +22,10 @@ function AdminPage() {
   const updateUser = useUpdateAdminUser()
   const deleteUser = useDeleteAdminUser()
   const changePassword = useChangePassword()
+  const isAdmin = session?.role === 'admin'
+  const { data: tokens, isLoading: tokensLoading } = useAdminTokens(isAdmin)
+  const updateToken = useUpdateAdminToken()
+  const deleteToken = useDeleteAdminToken()
   const [newUsername, setNewUsername] = useState('')
   const [showOwnPassword, setShowOwnPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -194,6 +201,68 @@ function AdminPage() {
                 </Button>
               </>
             )}
+          </motion.div>
+        ))}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.12 }}
+        className="mt-10"
+      >
+        <h3 className="px-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          Tokens API de tous les utilisateurs
+        </h3>
+      </motion.div>
+      <div className="mt-2 space-y-2">
+        {tokensLoading && <p className="text-sm text-zinc-500">Chargement…</p>}
+        {tokens?.length === 0 && (
+          <p className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-zinc-500">
+            Aucun token API actif.
+          </p>
+        )}
+        {tokens?.map((token) => (
+          <motion.div
+            key={token.id}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur transition-all hover:border-violet-500/40"
+          >
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium text-zinc-100">
+                {token.name}{' '}
+                <span className="text-xs font-normal text-zinc-500">— {token.user}</span>
+              </p>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                {token.scopes.join(', ')} · {token.status}
+                {token.last_used_at && ` · dernière utilisation : ${token.last_used_at}`}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-lg text-zinc-400 hover:bg-amber-500/15 hover:text-amber-300"
+              onClick={() =>
+                updateToken
+                  .mutateAsync({ id: token.id, is_active: !token.is_active })
+                  .catch((error) => toast.error(error.message))
+              }
+            >
+              {token.is_active ? 'Mettre en pause' : 'Reprendre'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-lg text-zinc-400 hover:bg-red-500/15 hover:text-red-400"
+              onClick={() => {
+                if (!window.confirm(`Révoquer le token ${token.name} de ${token.user} ?`)) return
+                deleteToken.mutateAsync(token.id).catch((error) => toast.error(error.message))
+              }}
+            >
+              Révoquer
+            </Button>
           </motion.div>
         ))}
       </div>
