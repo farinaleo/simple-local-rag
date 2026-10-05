@@ -2,6 +2,7 @@
 
 import io
 
+import pytesseract
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
@@ -12,6 +13,19 @@ from ingestion.extractors import extract_text
 pytestmark = pytest.mark.django_db
 
 client = APIClient()
+
+
+@pytest.fixture(autouse=True)
+def ocr_test_env(settings, monkeypatch, tmp_path):
+    """Run ingestion eagerly with a fake embedding model and a stub OCR."""
+    from tests.fakes import FakeEmbeddingModel
+
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    settings.CELERY_TASK_EAGER_PROPAGATES = True
+    monkeypatch.setattr("ingestion.embedding.get_embedding_model", lambda: FakeEmbeddingModel())
+    monkeypatch.setattr("pytesseract.image_to_string", lambda image: "  recognized text  ")
+    monkeypatch.setenv("UPLOAD_DIR", str(tmp_path / "uploads"))
+    yield
 
 
 def _png_bytes(text=""):
@@ -60,12 +74,8 @@ def test_extract_text_dispatches_images_to_ocr(tmp_path, monkeypatch):
     assert captured["called"] is True
 
 
-def test_ocr_result_is_stripped_and_indexed(tmp_path, monkeypatch):
-    """OCR output is stripped before chunking and reaches the index."""
-    monkeypatch.setattr(
-        "ingestion.embedding.get_embedding_model",
-        lambda: __import__("tests.fakes", fromlist=["FakeEmbeddingModel"]).FakeEmbeddingModel(),
-    )
+def test_ocr_result_is_stripped_before_indexing(tmp_path, monkeypatch):
+    """OCR output is stripped before chunking and indexing."""
     monkeypatch.setattr("pytesseract.image_to_string", lambda image: "  scanned paragraph text  ")
     image_path = tmp_path / "scan.png"
     image_path.write_bytes(_png_bytes())
@@ -78,7 +88,7 @@ def test_ocr_failure_marks_document_failed(monkeypatch, tmp_path):
 
     def broken_image_to_string(image):
         """Simulate a broken Tesseract installation."""
-        raise __import__("pytesseract").TesseractNotFoundError()
+        raise pytesseract.TesseractNotFoundError()
 
     monkeypatch.setattr("pytesseract.image_to_string", broken_image_to_string)
     image_path = tmp_path / "scan.png"
