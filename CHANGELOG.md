@@ -6,6 +6,9 @@
 
 ## Added
 - ✨(frontend) add user profile page with avatar and token management #57
+- ✨(backend) add self-service api tokens with scopes and throttle #56
+- ✨(frontend) add admin ui with temporary passwords and user blocking #55
+- ✨(backend) add admin and user roles with bootstrap admin account #54
 - 📝(docs) record pgvector vs qdrant decision and benchmark tooling #53
 - ✨(backend) add gpu inference via device flag and compose overlay #50
 - ✨(backend) add ocr ingestion for image documents #49
