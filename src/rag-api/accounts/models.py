@@ -19,6 +19,8 @@ class Profile(models.Model):
         role: The account tier, ``admin`` or ``user`` (default ``user``).
         must_change_password: Whether the next login must redirect to
             the password-change screen (temporary passwords).
+        display_name: The shown name, blank falls back to the username.
+        avatar: The profile picture, stored via the media storage.
 
     """
 
@@ -27,6 +29,8 @@ class Profile(models.Model):
     )
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.USER)
     must_change_password = models.BooleanField(default=False)
+    display_name = models.CharField(max_length=100, blank=True)
+    avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
 
     class Meta:
         """Meta options for the profile model."""

@@ -4,7 +4,6 @@ import secrets
 
 from django.contrib.auth.models import User
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -167,29 +166,3 @@ def _revoke_sessions(user):
             session.delete()
             count += 1
     return count
-
-
-class ChangePasswordView(APIView):
-    """Self-service password change, closing the temporary-password flow."""
-
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        """Change the caller's password and clear the must-change flag.
-
-        Args:
-            request: The JSON request carrying ``new_password``.
-
-        Returns:
-            204 on success, 400 on a too-short password.
-
-        """
-        new_password = request.data.get("new_password") or ""
-        if len(new_password) < 8:
-            return Response({"detail": "password must be at least 8 characters"}, status=400)
-        request.user.set_password(new_password)
-        request.user.save(update_fields=["password"])
-        profile, _ = Profile.objects.get_or_create(user=request.user)
-        profile.must_change_password = False
-        profile.save(update_fields=["must_change_password"])
-        return Response(status=status.HTTP_204_NO_CONTENT)
