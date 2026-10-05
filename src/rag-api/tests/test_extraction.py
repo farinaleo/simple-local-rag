@@ -1,4 +1,4 @@
-"""Tests for text extraction from the four accepted formats."""
+"""Tests for text extraction from the accepted file formats."""
 
 from pathlib import Path
 
@@ -9,9 +9,9 @@ from ingestion.extractors import ALLOWED_EXTENSIONS, extract_text
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
-def test_allowed_extensions_are_txt_md_pdf_docx():
-    """The accepted formats match the v2 decision."""
-    assert ALLOWED_EXTENSIONS == {".txt", ".md", ".pdf", ".docx"}
+def test_allowed_extensions_match_supported_formats():
+    """The accepted formats match the documented set."""
+    assert ALLOWED_EXTENSIONS == {".txt", ".md", ".pdf", ".docx", ".png", ".jpg", ".jpeg"}
 
 
 def test_extract_txt():
@@ -44,8 +44,8 @@ def test_extract_docx():
 
 def test_extract_rejects_unsupported_extension(tmp_path):
     """Unsupported formats raise a clear error."""
-    file_path = tmp_path / "photo.png"
-    file_path.write_bytes(b"\x89PNG")
+    file_path = tmp_path / "photo.exe"
+    file_path.write_bytes(b"binary")
     with pytest.raises(ValueError, match="unsupported file type"):
         extract_text(file_path)
 

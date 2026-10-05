@@ -54,10 +54,10 @@ def test_upload_accepts_each_format(filename):
 
 
 def test_upload_rejects_unsupported_format():
-    """An image upload returns 400 with a clear message."""
+    """An unsupported upload returns 400 with a clear message."""
     response = client.post(
         "/api/documents/",
-        {"file": _make_file("photo.png", b"\x89PNG", "image/png")},
+        {"file": _make_file("archive.zip", b"PK\x03\x04", "application/zip")},
         format="multipart",
     )
 
