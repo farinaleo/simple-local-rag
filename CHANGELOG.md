@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+## Added
+- ✨(backend) add ocr ingestion for image documents #49
+
 ## Changed
 - ✨(backend) add multi-user authentication with per-document sharing #43
 - 🐛(frontend) fix vite dev server missing api proxy #42
