@@ -1,0 +1,21 @@
+# Qdrant overlay for the pgvector vs Qdrant evaluation (issue #22).
+# docker compose -f docker-compose.yml -f compose.qdrant.yml up
+# Starts a Qdrant service alongside the stack; the retrieval layer
+# still uses pgvector until the migration decision is applied.
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rag-qdrant
+    networks:
+      - rag_backend
+    volumes:
+      - rag_qdrant:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:6333/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+volumes:
+  rag_qdrant:
