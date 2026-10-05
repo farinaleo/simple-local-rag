@@ -1,4 +1,4 @@
-"""DRF views for the accounts API: register, session auth, profile."""
+"""DRF views for the accounts API: register, session auth, profile, roles."""
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -6,6 +6,9 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from accounts.models import Profile, Role
+from accounts.permissions import IsAdmin, other_admins_excluding
 
 
 class RegisterView(APIView):
@@ -81,5 +84,82 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """Return the id and username of the authenticated user."""
-        return Response({"id": request.user.pk, "username": request.user.username})
+        """Return the id, username and role of the authenticated user."""
+        profile = getattr(request.user, "profile", None)
+        role = profile.role if profile is not None else Role.USER
+        return Response({"id": request.user.pk, "username": request.user.username, "role": role})
+
+
+class UserListView(APIView):
+    """Admin-only listing of all accounts with their role."""
+
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        """Return every user with id, username and role."""
+        users = User.objects.select_related("profile").order_by("id")
+        data = [
+            {
+                "id": user.pk,
+                "username": user.username,
+                "role": user.profile.role if hasattr(user, "profile") else Role.USER,
+            }
+            for user in users
+        ]
+        return Response(data)
+
+
+class UserRoleView(APIView):
+    """Admin-only role management for a single account."""
+
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, user_id):
+        """Change the role of an account, guarding the last admin.
+
+        Args:
+            request: The JSON request carrying ``role``.
+            user_id: The id of the user whose role changes.
+
+        Returns:
+            200 with the updated profile, 400 on an invalid or unsafe
+            change, 404 when the user does not exist.
+
+        """
+        role = request.data.get("role", "")
+        if role not in Role.values:
+            return Response({"detail": "invalid role"}, status=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.select_related("profile").filter(pk=user_id).first()
+        if user is None:
+            return Response({"detail": "user not found"}, status=status.HTTP_404_NOT_FOUND)
+        profile, _ = Profile.objects.get_or_create(user=user)
+        if profile.role == Role.ADMIN and role != Role.ADMIN and other_admins_excluding(user) == 0:
+            return Response(
+                {"detail": "cannot demote the last admin"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        profile.role = role
+        profile.save(update_fields=["role"])
+        return Response({"id": user.pk, "username": user.username, "role": profile.role})
+
+    def delete(self, request, user_id):
+        """Delete an account, guarding the last admin.
+
+        Args:
+            request: The deletion request.
+            user_id: The id of the user to delete.
+
+        Returns:
+            204 on success, 400 when deleting the last admin, 404 when
+            the user does not exist.
+
+        """
+        user = User.objects.select_related("profile").filter(pk=user_id).first()
+        if user is None:
+            return Response({"detail": "user not found"}, status=status.HTTP_404_NOT_FOUND)
+        profile, _ = Profile.objects.get_or_create(user=user)
+        if profile.role == Role.ADMIN and other_admins_excluding(user) == 0:
+            return Response(
+                {"detail": "cannot delete the last admin"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
