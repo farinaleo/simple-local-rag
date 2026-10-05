@@ -5,6 +5,7 @@
 - 🐛(docker) fix nginx proxying to stale container ips #51
 
 ## Added
+- 📝(docs) record pgvector vs qdrant decision and benchmark tooling #53
 - ✨(backend) add gpu inference via device flag and compose overlay #50
 - ✨(backend) add ocr ingestion for image documents #49
 
