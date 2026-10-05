@@ -14,7 +14,9 @@ def _load_generation_model():
 
     Model name from the ``MODEL_NAME`` environment variable
     (default: Qwen3-0.6B); HF_HOME is expected to be set before the
-    first import, as in the POC.
+    first import, as in the POC. The ``RAG_DEVICE`` environment
+    variable selects the inference device: ``cpu``, ``cuda`` or
+    ``auto`` (default, accelerate picks the best available).
 
     Returns:
         The (tokenizer, model) pair.
@@ -26,9 +28,14 @@ def _load_generation_model():
         os.environ.setdefault("HF_HOME", os.path.expanduser("~/.cache/huggingface"))
         model_name = os.environ.get("MODEL_NAME", "Qwen/Qwen3-0.6B")
         _TOKENIZER = AutoTokenizer.from_pretrained(model_name)
-        _MODEL = AutoModelForCausalLM.from_pretrained(
-            model_name, torch_dtype="auto", device_map="auto"
-        )
+        device = os.environ.get("RAG_DEVICE", "auto")
+        if device == "cpu":
+            _MODEL = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto")
+            _MODEL.to("cpu")
+        else:
+            _MODEL = AutoModelForCausalLM.from_pretrained(
+                model_name, torch_dtype="auto", device_map=device
+            )
     return _TOKENIZER, _MODEL
 
 

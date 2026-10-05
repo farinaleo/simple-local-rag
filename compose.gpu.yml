@@ -1,0 +1,27 @@
+# GPU overlay: docker compose -f docker-compose.yml -f compose.gpu.yml up
+# Requires the nvidia-container-toolkit on the host. Keeps the same
+# image and codebase; only the inference device and GPU reservation
+# change. Apply to api and worker so embeddings and generation both
+# run on the GPU.
+services:
+  api:
+    environment:
+      RAG_DEVICE: cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  worker:
+    environment:
+      RAG_DEVICE: cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

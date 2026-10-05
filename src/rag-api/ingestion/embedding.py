@@ -10,7 +10,9 @@ def get_embedding_model():
 
     Follows the POC configuration: model name from the
     ``EMBED_NAME`` environment variable, HF cache location from
-    ``HF_HOME`` (must be set before importing the model).
+    ``HF_HOME`` (must be set before importing the model). The
+    ``RAG_DEVICE`` environment variable selects the device
+    (``cpu``, ``cuda`` or ``auto``, default ``auto``).
 
     Returns:
         The cached sentence-transformers model instance.
@@ -21,5 +23,6 @@ def get_embedding_model():
         from sentence_transformers import SentenceTransformer
 
         model_name = os.environ.get("EMBED_NAME", "Qwen/Qwen3-Embedding-0.6B")
-        _MODEL = SentenceTransformer(model_name)
+        device = os.environ.get("RAG_DEVICE", "auto")
+        _MODEL = SentenceTransformer(model_name, device=device if device != "auto" else None)
     return _MODEL
