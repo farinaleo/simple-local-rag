@@ -35,17 +35,17 @@ class QueryView(APIView):
         if not question:
             return Response({"detail": "no question provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        retrieved = retrieve_chunks(question)
+        retrieved = retrieve_chunks(question, user=request.user)
         chunks = list(retrieved)
         chunk_texts = [chunk.content for chunk in chunks]
 
         return StreamingHttpResponse(
-            _sse_stream(question, chunks, chunk_texts),
+            _sse_stream(question, chunks, chunk_texts, user=request.user),
             content_type="text/event-stream",
         )
 
 
-def _sse_stream(question, chunks, chunk_texts):
+def _sse_stream(question, chunks, chunk_texts, user=None):
     """Yield the SSE events of one question-answering session.
 
     Args:
@@ -57,19 +57,22 @@ def _sse_stream(question, chunks, chunk_texts):
         ``token`` events carrying answer pieces, then a ``sources``
         event; on generation failure an ``error`` event and a failed
         query row is recorded (no zombie rows).
+
+    Args:
+        user: The requesting user, recorded on the Query row.
     """
     try:
         _thinking, content = generate_answer(question, chunk_texts)
     except Exception as error:  # noqa: BLE001 — surfaced to the client
         logger.exception("query generation failed")
-        _record_failed_query(question, str(error))
+        _record_failed_query(question, str(error), user=user)
         yield _sse_event("error", {"detail": "generation failed"})
         return
 
     for piece in _split_answer_pieces(content):
         yield _sse_event("token", {"text": piece})
 
-    query = _record_query(question, content, chunks)
+    query = _record_query(question, content, chunks, user=user)
     sources = QuerySerializer(query).data["sources"]
     yield _sse_event("sources", {"query_id": query.pk, "sources": sources})
 
@@ -99,31 +102,41 @@ def _sse_event(event, data):
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
 
-def _record_query(question, answer, chunks):
+def _record_query(question, answer, chunks, user=None):
     """Persist a successful exchange with its sources.
 
     Args:
         question: The user question.
         answer: The generated answer.
         chunks: The retrieved source chunks.
+        user: The requesting user, recorded on the Query row.
 
     Returns:
         The created Query row.
     """
     with transaction.atomic():
-        query = Query.objects.create(question=question, answer=answer)
+        query = Query.objects.create(
+            question=question,
+            answer=answer,
+            user=user if getattr(user, "is_authenticated", False) else None,
+        )
         query.sources.set(chunks)
     return query
 
 
-def _record_failed_query(question, error):
+def _record_failed_query(question, error, user=None):
     """Persist a failed exchange, error stored on the answer field.
 
     Args:
         question: The user question.
         error: The generation error message.
+        user: The requesting user, recorded on the Query row.
     """
-    Query.objects.create(question=question, answer=f"[generation failed] {error}")
+    Query.objects.create(
+        question=question,
+        answer=f"[generation failed] {error}",
+        user=user if getattr(user, "is_authenticated", False) else None,
+    )
 
 
 class QueryHistoryView(APIView):
@@ -132,5 +145,7 @@ class QueryHistoryView(APIView):
     def get(self, request):
         """Return the past queries newest-first with their sources."""
         queryset = Query.objects.prefetch_related("sources").all()
+        if request.user.is_authenticated:
+            queryset = queryset.filter(user=request.user)
         serializer = QuerySerializer(queryset, many=True)
         return Response(serializer.data)
