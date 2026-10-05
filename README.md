@@ -258,6 +258,16 @@ device selection and the GPU reservation change.
 Switch back to CPU by starting without the overlay (`RAG_DEVICE`
 defaults to `auto`, which falls back to CPU when no GPU is visible).
 `make rebuild` keeps working unchanged for the CPU setup.
+
+**Platform notes** — the stack runs on Linux and macOS hosts:
+
+- The default CPU setup works identically on both (uv resolves the
+  right torch wheel per platform at build time: CUDA-enabled on Linux,
+  CPU-only on macOS).
+- The GPU overlay targets **Linux hosts only**: it needs an NVIDIA GPU
+  and the nvidia-container-toolkit, neither of which exists on macOS
+  (Apple Silicon GPUs are not exposed to containers). On a Mac, keep
+  the default setup.
 ---
 
 ## 🧪 CI matrix
