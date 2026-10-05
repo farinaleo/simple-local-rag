@@ -23,6 +23,7 @@ def search_similar_chunks(query_embedding, top_k=3, user=None):
             document__visibility=DocumentVisibility.SHARED
         )
     return list(
-        chunks.annotate(distance=CosineDistance("embedding", query_embedding))
-        .order_by("distance")[:top_k]
+        chunks.annotate(distance=CosineDistance("embedding", query_embedding)).order_by("distance")[
+            :top_k
+        ]
     )
