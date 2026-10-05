@@ -8,10 +8,12 @@ const navItems = [
   { to: '/documents', label: 'Documents', icon: '📄' },
   { to: '/chat', label: 'Chats', icon: '💬' },
 ]
+const adminNavItems = [{ to: '/admin', label: 'Administration', icon: '🛡️' }]
 
 export default function Layout() {
   const { data: documents } = useDocuments()
   const { data: session } = useSession()
+  const items = session?.role === 'admin' ? [...navItems, ...adminNavItems] : navItems
   const logout = useLogout()
   const navigate = useNavigate()
   const indexedCount = (documents ?? []).filter((d) => d.status === 'indexed').length
@@ -37,7 +39,7 @@ export default function Layout() {
           </div>
 
           <nav className="mt-8 space-y-1.5">
-            {navItems.map((item) => (
+            {items.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

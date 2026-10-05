@@ -84,10 +84,18 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """Return the id, username and role of the authenticated user."""
+        """Return the id, username, role and password flag of the user."""
         profile = getattr(request.user, "profile", None)
         role = profile.role if profile is not None else Role.USER
-        return Response({"id": request.user.pk, "username": request.user.username, "role": role})
+        must_change = profile.must_change_password if profile is not None else False
+        return Response(
+            {
+                "id": request.user.pk,
+                "username": request.user.username,
+                "role": role,
+                "must_change_password": must_change,
+            }
+        )
 
 
 class UserListView(APIView):
