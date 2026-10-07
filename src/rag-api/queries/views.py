@@ -4,6 +4,7 @@ import json
 import logging
 
 from django.db import transaction
+from django.db.models import Prefetch
 from django.http import StreamingHttpResponse
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -273,11 +274,9 @@ class ConversationDetailView(APIView):
         conversation = self._get_conversation(request, pk)
         if conversation is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        conversation = (
-            Conversation.objects.prefetch_related("messages")
-            .order_by("messages__created_at")
-            .get(pk=conversation.pk)
-        )
+        conversation = Conversation.objects.prefetch_related(
+            Prefetch("messages", queryset=Query.objects.order_by("created_at"))
+        ).get(pk=conversation.pk)
         serializer = ConversationDetailSerializer(conversation)
         return Response(serializer.data)
 
