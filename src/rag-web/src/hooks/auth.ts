@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { API_BASE_URL, getCsrfToken } from '@/api'
+import { toApiError } from '@/lib/apiError'
 
 const sessionKey = ['session'] as const
 
@@ -176,8 +177,7 @@ async function profileFetch(path: string, init?: RequestInit) {
     ...init,
   })
   if (!response.ok) {
-    const detail = (await response.json().catch(() => null))?.detail
-    throw new Error(detail ?? `profile request failed (${response.status})`)
+    throw await toApiError(response)
   }
   return response.status === 204 ? null : response.json()
 }

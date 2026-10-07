@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 ## Fixed
+- 🐛(docker) raise nginx body limit for avatar uploads (413 fix) #61
+- ✨(frontend) add clear french error messages for api failures #61
 - 🐛(docker) fix nginx proxying to stale container ips #51
 
 ## Added
