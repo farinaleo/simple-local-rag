@@ -108,7 +108,7 @@ def test_query_without_conversation_creates_one_titled_from_question(monkeypatch
     """A query without conversation id starts a new titled conversation."""
     alice, alice_client = _auth("alice")
     monkeypatch.setattr("queries.views.retrieve_chunks", lambda question, **kw: [])
-    monkeypatch.setattr("queries.views.generate_answer", lambda question, texts: ("", "Answer."))
+    monkeypatch.setattr("queries.views.generate_answer", lambda question, texts, history=None: ("", "Answer."))
 
     response = alice_client.post("/api/query/", {"question": "What is the tower?"}, format="json")
     assert response.status_code == 200
@@ -126,7 +126,7 @@ def test_query_with_conversation_appends_to_it(monkeypatch):
     alice, alice_client = _auth("alice")
     conversation = _make_conversation(owner=alice, title="Existing")
     monkeypatch.setattr("queries.views.retrieve_chunks", lambda question, **kw: [])
-    monkeypatch.setattr("queries.views.generate_answer", lambda question, texts: ("", "Answer."))
+    monkeypatch.setattr("queries.views.generate_answer", lambda question, texts, history=None: ("", "Answer."))
 
     response = alice_client.post(
         "/api/query/",

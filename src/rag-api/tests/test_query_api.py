@@ -52,7 +52,7 @@ def test_query_streams_tokens_then_sources(indexed_document, monkeypatch):
     )
     monkeypatch.setattr(
         "queries.views.generate_answer",
-        lambda question, texts: ("", "The tower is tall and made of iron."),
+        lambda question, texts, history=None: ("", "The tower is tall and made of iron."),
     )
 
     response = client.post("/api/query/", {"question": "How tall?"}, format="json")
@@ -84,7 +84,7 @@ def test_query_persists_answer_with_sources(indexed_document, monkeypatch):
     )
     monkeypatch.setattr(
         "queries.views.generate_answer",
-        lambda question, texts: ("", "Short grounded answer."),
+        lambda question, texts, history=None: ("", "Short grounded answer."),
     )
 
     response = client.post("/api/query/", {"question": "How tall?"}, format="json")
@@ -156,7 +156,7 @@ def test_query_uses_real_retriever_contract(indexed_document, monkeypatch):
     )
     monkeypatch.setattr(
         "queries.views.generate_answer",
-        lambda question, texts: ("", "Grounded answer."),
+        lambda question, texts, history=None: ("", "Grounded answer."),
     )
 
     response = client.post("/api/query/", {"question": "How tall?"}, format="json")
