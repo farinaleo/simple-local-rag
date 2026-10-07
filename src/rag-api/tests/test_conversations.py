@@ -16,6 +16,11 @@ def _make_conversation(owner=None, title="Discussion"):
     return Conversation.objects.create(owner=owner, title=title)
 
 
+def _make_query(conversation, question, answer):
+    """Create a past exchange on a conversation."""
+    return Query.objects.create(conversation=conversation, question=question, answer=answer)
+
+
 def _auth(username):
     """Create a user and return an authenticated client."""
     user = User.objects.create_user(username=username, password="password123")
@@ -133,6 +138,35 @@ def test_query_with_conversation_appends_to_it(monkeypatch):
 
     assert Conversation.objects.count() == 1
     assert Query.objects.get().conversation == conversation
+
+
+def test_query_passes_conversation_history_to_generator(monkeypatch):
+    """The generator receives the previous exchanges of the conversation."""
+    alice, alice_client = _auth("alice")
+    conversation = _make_conversation(owner=alice, title="Existing")
+    _make_query(conversation=conversation, question="First?", answer="First answer.")
+    _make_query(conversation=conversation, question="Second?", answer="Second answer.")
+    monkeypatch.setattr("queries.views.retrieve_chunks", lambda question, **kw: [])
+    seen = {}
+
+    def fake_generate_answer(question, texts, history=None):
+        seen["history"] = history
+        return "", "Answer."
+
+    monkeypatch.setattr("queries.views.generate_answer", fake_generate_answer)
+
+    response = alice_client.post(
+        "/api/query/",
+        {"question": "Third?", "conversation_id": conversation.pk},
+        format="json",
+    )
+    assert response.status_code == 200
+    list(response.streaming_content)
+
+    assert seen["history"] == [
+        ("First?", "First answer."),
+        ("Second?", "Second answer."),
+    ]
 
 
 def test_query_with_foreign_conversation_is_rejected(monkeypatch):

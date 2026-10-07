@@ -43,15 +43,19 @@ _TOKENIZER = None
 _MODEL = None
 
 
-def build_messages(question, retrieved_chunks):
+def build_messages(question, retrieved_chunks, history=None):
     """Build the chat messages for a grounded question.
 
     Args:
         question: The user question.
         retrieved_chunks: The chunk texts providing the context.
+        history: The previous exchanges of the conversation, oldest
+            first, each as a ``(question, answer)`` pair.
 
     Returns:
-        The messages list for the chat template.
+        The messages list for the chat template: one user and one
+        assistant message per past exchange, then the grounded new
+        question.
     """
     context = "\n\n".join(f"[{index + 1}] {chunk}" for index, chunk in enumerate(retrieved_chunks))
     content = (
@@ -60,7 +64,12 @@ def build_messages(question, retrieved_chunks):
         f"Context:\n{context}\n\n"
         f"Question: {question}"
     )
-    return [{"role": "user", "content": content}]
+    messages = []
+    for past_question, past_answer in history or []:
+        messages.append({"role": "user", "content": past_question})
+        messages.append({"role": "assistant", "content": past_answer})
+    messages.append({"role": "user", "content": content})
+    return messages
 
 
 def produce_model_input(messages):
@@ -117,17 +126,19 @@ def parse_output(output_ids):
     return thinking, content
 
 
-def generate_answer(question, retrieved_chunks):
+def generate_answer(question, retrieved_chunks, history=None):
     """Answer a question from retrieved chunks, POC-equivalent.
 
     Args:
         question: The user question.
         retrieved_chunks: The chunk texts providing the context.
+        history: The previous exchanges of the conversation, oldest
+            first, each as a ``(question, answer)`` pair.
 
     Returns:
         The (thinking_content, content) pair.
     """
-    messages = build_messages(question, retrieved_chunks)
+    messages = build_messages(question, retrieved_chunks, history=history)
     model_inputs = produce_model_input(messages)
     output_ids = text_completion(model_inputs)
     return parse_output(output_ids)

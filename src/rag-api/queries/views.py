@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 
 from django.db import transaction
 from django.db.models import Prefetch
@@ -72,13 +73,36 @@ class QueryView(APIView):
         retrieved = retrieve_chunks(question, user=request.user)
         chunks = list(retrieved)
         chunk_texts = [chunk.content for chunk in chunks]
+        history = _conversation_history(conversation)
 
         return StreamingHttpResponse(
             _sse_stream(
-                question, chunks, chunk_texts, user=request.user, conversation=conversation
+                question,
+                chunks,
+                chunk_texts,
+                user=request.user,
+                conversation=conversation,
+                history=history,
             ),
             content_type="text/event-stream",
         )
+
+
+def _conversation_history(conversation):
+    """Return the past exchanges of a conversation for prompting.
+
+    Args:
+        conversation: The conversation the new question belongs to.
+
+    Returns:
+        The last HISTORY_TURNS exchanges, oldest first, each as a
+        ``(question, answer)`` pair.
+    """
+    max_turns = int(os.environ.get("HISTORY_TURNS", "6"))
+    messages = conversation.messages.order_by("created_at")
+    if max_turns > 0:
+        messages = messages[max(0, messages.count() - max_turns) :]
+    return [(message.question, message.answer) for message in messages]
 
 
 def _resolve_conversation(request):
@@ -109,13 +133,15 @@ def _resolve_conversation(request):
     return conversation if conversation.owner_id == request.user.pk else None
 
 
-def _sse_stream(question, chunks, chunk_texts, user=None, conversation=None):
+def _sse_stream(question, chunks, chunk_texts, user=None, conversation=None, history=None):
     """Yield the SSE events of one question-answering session.
 
     Args:
         question: The user question.
         chunks: The retrieved source chunks.
         chunk_texts: The plain text of each source chunk.
+        history: The previous exchanges of the conversation, oldest
+            first, each as a ``(question, answer)`` pair.
 
     Yields:
         ``token`` events carrying answer pieces, then a ``sources``
@@ -127,7 +153,7 @@ def _sse_stream(question, chunks, chunk_texts, user=None, conversation=None):
         conversation: The conversation the exchange belongs to.
     """
     try:
-        _thinking, content = generate_answer(question, chunk_texts)
+        _thinking, content = generate_answer(question, chunk_texts, history=history)
     except Exception as error:  # noqa: BLE001 — surfaced to the client
         logger.exception("query generation failed")
         _record_failed_query(question, str(error), user=user, conversation=conversation)
