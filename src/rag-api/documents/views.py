@@ -4,7 +4,8 @@ import mimetypes
 import os
 
 from django.db import transaction
-from rest_framework import status
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -17,6 +18,12 @@ ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx", ".png", ".jpg", ".jpeg"}
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 
+class DocumentUploadSerializer(serializers.Serializer):
+    """Multipart body of a document upload."""
+
+    file = serializers.FileField(help_text="The document file to ingest.")
+
+
 class DocumentListCreateView(APIView):
     """List documents and handle asynchronous multipart uploads."""
 
@@ -26,12 +33,23 @@ class DocumentListCreateView(APIView):
             return [DocumentsWritePermission()]
         return [DocumentsReadPermission()]
 
+    @extend_schema(
+        operation_id="documents_list",
+        responses=DocumentSerializer(many=True),
+    )
     def get(self, request):
         """Return the documents the user can read, newest first."""
         queryset = _readable_documents(request.user).order_by("-created_at")
         serializer = DocumentSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    @extend_schema(
+        request=DocumentUploadSerializer,
+        responses={
+            202: DocumentSerializer,
+            400: OpenApiResponse(description="Unsupported type, missing file or oversized upload."),
+        },
+    )
     def post(self, request):
         """Store an uploaded file and dispatch its ingestion (202).
 
@@ -118,6 +136,10 @@ class DocumentDetailView(APIView):
             return [DocumentsWritePermission()]
         return [DocumentsReadPermission()]
 
+    @extend_schema(
+        operation_id="documents_retrieve",
+        responses={200: DocumentDetailSerializer, 404: OpenApiResponse()},
+    )
     def get(self, request, pk):
         """Return a document including its chunks.
 

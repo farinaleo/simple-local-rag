@@ -10,5 +10,8 @@ class AccountsConfig(AppConfig):
     name = "accounts"
 
     def ready(self):
-        """Ensure every user has a profile row (roles v4)."""
-        from accounts import signals  # noqa: F401
+        """Register app signals and OpenAPI schema extensions."""
+        from accounts import (
+            schema,  # noqa: F401  register OpenAPI extensions
+            signals,  # noqa: F401
+        )

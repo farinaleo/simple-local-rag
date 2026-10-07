@@ -25,6 +25,37 @@ def test_schema_covers_documents_and_query_endpoints():
     assert "/api/query/" in schema["paths"]
 
 
+def test_schema_documents_bearer_auth_and_request_bodies():
+    """The schema exposes the bearer scheme and describes request bodies."""
+    response = client.get("/api/schema.json/")
+    assert response.status_code == 200
+    schema = response.json()
+    schemes = schema["components"]["securitySchemes"]
+    assert schemes["bearerAuth"]["type"] == "http"
+    assert schemes["bearerAuth"]["scheme"] == "bearer"
+    query = schema["paths"]["/api/query/"]["post"]
+    assert "application/json" in query["requestBody"]["content"]
+    upload = schema["paths"]["/api/documents/"]["post"]
+    assert "multipart/form-data" in upload["requestBody"]["content"]
+    health = schema["paths"]["/api/health/"]["get"]["responses"]["200"]
+    assert "application/json" in health["content"]
+
+
+def test_schema_operation_ids_are_unique():
+    """No generated operationId collides after explicit disambiguation."""
+    response = client.get("/api/schema.json/")
+    schema = response.json()
+    operation_ids = [
+        operation["operationId"]
+        for path in schema["paths"].values()
+        for operation in path.values()
+        if "operationId" in operation
+    ]
+    assert len(operation_ids) == len(set(operation_ids))
+    assert "documents_list" in operation_ids
+    assert "documents_retrieve" in operation_ids
+
+
 def test_docs_page_renders():
     """The browsable documentation page renders with the JSON download link."""
     response = client.get("/api/docs/")
