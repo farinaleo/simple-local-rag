@@ -43,7 +43,10 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
                     ),
                 ),
                 ("title", models.CharField(max_length=120)),
@@ -59,7 +62,6 @@ class Migration(migrations.Migration):
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
-                migrations.RunPython(group_orphan_queries, migrations.RunPython.noop),
             ],
             options={
                 "ordering": ["-updated_at"],
@@ -76,4 +78,5 @@ class Migration(migrations.Migration):
                 to="documents.conversation",
             ),
         ),
+        migrations.RunPython(group_orphan_queries, migrations.RunPython.noop),
     ]
