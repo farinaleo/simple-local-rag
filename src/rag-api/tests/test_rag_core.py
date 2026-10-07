@@ -56,3 +56,24 @@ def test_build_messages_grounded_prompt():
     assert "[2] Grass is green." in content
     assert "Question: What color?" in content
     assert messages[0]["role"] == "user"
+
+
+def test_build_messages_with_history():
+    """Past exchanges precede the grounded question as chat turns."""
+    history = [("First?", "First answer."), ("Second?", "Second answer.")]
+
+    messages = build_messages("Third?", ["Context."], history=history)
+
+    assert [message["role"] for message in messages] == [
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+    ]
+    assert messages[0]["content"] == "First?"
+    assert messages[1]["content"] == "First answer."
+    assert messages[2]["content"] == "Second?"
+    assert messages[3]["content"] == "Second answer."
+    assert "Question: Third?" in messages[4]["content"]
+    assert "[1] Context." in messages[4]["content"]

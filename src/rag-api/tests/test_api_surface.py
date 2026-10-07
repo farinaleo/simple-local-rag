@@ -129,7 +129,7 @@ def test_bearer_flow_upload_then_query(monkeypatch):
 
     monkeypatch.setattr(
         "queries.views.generate_answer",
-        lambda question, texts: ("", "The tower is tall and made of iron."),
+        lambda question, texts, history=None: ("", "The tower is tall and made of iron."),
     )
     query = token_client.post(
         "/api/query/",

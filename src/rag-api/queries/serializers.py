@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from documents.models import Document, Query
+from documents.models import Conversation, Document, Query
 from documents.serializers import ChunkSerializer
 
 
@@ -37,3 +37,25 @@ class QuerySerializer(serializers.ModelSerializer):
 
         model = Query
         fields = ["id", "question", "answer", "sources", "created_at"]
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    """Conversation list entry: title and last activity timestamp."""
+
+    class Meta:
+        """Model and fields exposed by the conversation list endpoint."""
+
+        model = Conversation
+        fields = ["id", "title", "created_at", "updated_at"]
+
+
+class ConversationDetailSerializer(serializers.ModelSerializer):
+    """A conversation with its full message history."""
+
+    messages = QuerySerializer(many=True, read_only=True)
+
+    class Meta:
+        """Model and fields exposed by the conversation detail endpoint."""
+
+        model = Conversation
+        fields = ["id", "title", "messages", "created_at", "updated_at"]
