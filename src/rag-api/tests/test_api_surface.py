@@ -25,6 +25,25 @@ def test_schema_covers_documents_and_query_endpoints():
     assert "/api/query/" in schema["paths"]
 
 
+def test_schema_version_matches_settings_source_of_truth():
+    """The schema version comes from the API_VERSION setting."""
+    from django.conf import settings
+
+    response = client.get("/api/schema.json/")
+    assert response.status_code == 200
+    schema = response.json()
+    assert schema["info"]["version"] == settings.API_VERSION
+    assert schema["info"]["version"].startswith("4.")
+
+
+def test_schema_version_follows_api_version_env_override(settings):
+    """Overriding API_VERSION propagates to the generated schema."""
+    settings.API_VERSION = "4.1.0"
+    response = client.get("/api/schema.json/")
+    assert response.status_code == 200
+    assert response.json()["info"]["version"] == "4.1.0"
+
+
 def test_schema_documents_bearer_auth_and_request_bodies():
     """The schema exposes the bearer scheme and describes request bodies."""
     response = client.get("/api/schema.json/")
