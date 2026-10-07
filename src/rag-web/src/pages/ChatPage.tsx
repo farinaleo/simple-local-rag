@@ -92,23 +92,21 @@ function ConversationCard({
 }) {
   return (
     <div
-      className={`group flex w-full cursor-pointer items-center gap-2 rounded-2xl border p-3 text-left backdrop-blur transition-all ${
+      className={`group relative flex h-10 w-full cursor-pointer items-center rounded-xl border px-3 text-left backdrop-blur transition-all ${
         active
           ? 'border-violet-500/60 bg-violet-500/10'
           : 'border-white/10 bg-white/5 hover:border-violet-500/40 hover:bg-white/[0.08]'
       }`}
       onClick={onClick}
     >
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-zinc-100">{title}</p>
-        <p className="mt-0.5 text-xs text-zinc-400">
-          {new Date(updatedAt).toLocaleDateString('fr-FR')}
-        </p>
-      </div>
+      <p className="truncate pr-6 text-sm font-medium text-zinc-100">{title}</p>
+      <p className="ml-auto pl-2 shrink-0 text-xs text-zinc-400">
+        {new Date(updatedAt).toLocaleDateString('fr-FR')}
+      </p>
       <button
         type="button"
         aria-label="Supprimer la conversation"
-        className="rounded-lg p-1.5 text-zinc-500 opacity-0 transition hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-xs text-zinc-500 opacity-0 transition hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
         onClick={(event) => {
           event.stopPropagation()
           onDelete()
