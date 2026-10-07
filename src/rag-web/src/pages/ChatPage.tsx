@@ -99,14 +99,14 @@ function ConversationCard({
       }`}
       onClick={onClick}
     >
-      <p className="truncate pr-6 text-sm font-medium text-zinc-100">{title}</p>
-      <p className="ml-auto pl-2 shrink-0 text-xs text-zinc-400">
+      <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-100">{title}</p>
+      <p className="ml-2 shrink-0 text-xs text-zinc-400 transition-all duration-200 group-hover:-translate-x-7 group-hover:opacity-0">
         {new Date(updatedAt).toLocaleDateString('fr-FR')}
       </p>
       <button
         type="button"
         aria-label="Supprimer la conversation"
-        className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-xs text-zinc-500 opacity-0 transition hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
+        className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-lg text-xs text-zinc-500 opacity-0 transition-all duration-200 hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
         onClick={(event) => {
           event.stopPropagation()
           onDelete()
@@ -216,12 +216,12 @@ export default function ChatPage() {
           title="Chats"
           subtitle="Discutez avec votre RAG et retrouvez vos conversations."
         />
-        <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
           <motion.div
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35 }}
-            className="flex h-[560px] flex-col space-y-3"
+            className="flex flex-col space-y-3 lg:h-[560px]"
           >
             <Button
               className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/25 transition-transform hover:scale-[1.02] hover:from-violet-500 hover:to-fuchsia-500"
@@ -258,7 +258,7 @@ export default function ChatPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.08 }}
-            className="flex h-[560px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur"
+            className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur lg:h-[560px]"
           >
             <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-sm shadow-lg shadow-violet-600/25">
