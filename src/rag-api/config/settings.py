@@ -23,6 +23,11 @@ load_dotenv(_ENV_PATH)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Version of the served API, reported in the OpenAPI schema and used as a
+# single source of truth for V4 releases: bump it with every release that
+# changes the API surface, alongside the CHANGELOG entry.
+API_VERSION = os.environ.get("API_VERSION", "4.0.0")
+
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-only-key")
 DEBUG = os.environ.get("DEBUG", "true").lower() == "true"
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
@@ -130,7 +135,7 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Simple Local RAG API",
     "DESCRIPTION": "RAG API for documents and chat answers. External clients "
     "authenticate with a Bearer token created on the profile page.",
-    "VERSION": "4.0.0",
+    "VERSION": API_VERSION,
     "SERVE_INCLUDE_SCHEMA": False,
 }
 

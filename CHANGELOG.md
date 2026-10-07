@@ -10,6 +10,7 @@
 - ✨(backend) add openapi schema, api docs and production media serving #60
 - ✨(backend) add json schema endpoint and download button in api docs #60
 - ✨(backend) document bearer auth and request bodies in openapi schema #62
+- ✨(backend) make openapi schema version configurable via api version #63
 - ✨(backend) add admin oversight of all user api tokens #59
 - ✨(frontend) add user profile page with avatar and token management #57
 - ✨(backend) add self-service api tokens with scopes and throttle #56

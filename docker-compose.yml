@@ -39,6 +39,7 @@ services:
     environment:
       DEBUG: ${DEBUG:-true}
       SECRET_KEY: ${SECRET_KEY:-dev-only}
+      API_VERSION: ${API_VERSION:-4.0.0}
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/rag
       CELERY_BROKER_URL: redis://redis:6379/0
       UPLOAD_DIR: /data/uploads
