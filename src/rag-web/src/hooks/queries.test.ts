@@ -19,7 +19,12 @@ describe('parseSseChunk', () => {
       sources,
     })}`
     const event = parseSseChunk(raw)
-    expect(event).toEqual({ type: 'sources', queryId: 7, sources } satisfies StreamEvent)
+    expect(event).toEqual({
+      type: 'sources',
+      queryId: 7,
+      conversationId: null,
+      sources,
+    } satisfies StreamEvent)
   })
 
   it('parses an error event', () => {

@@ -29,7 +29,23 @@ export interface QueryHistoryItem {
   created_at: string
 }
 
+export interface ConversationItem {
+  id: number
+  title: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ConversationDetail extends ConversationItem {
+  messages: QueryHistoryItem[]
+}
+
 export type StreamEvent =
   | { type: 'token'; text: string }
-  | { type: 'sources'; queryId: number; sources: QuerySource[] }
+  | {
+      type: 'sources'
+      queryId: number
+      conversationId: number | null
+      sources: QuerySource[]
+    }
   | { type: 'error'; detail: string }

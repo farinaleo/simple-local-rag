@@ -120,6 +120,47 @@ class Chunk(models.Model):
         return f"{self.document.original_filename}#{self.ordinal}"
 
 
+class Conversation(models.Model):
+    """A chat thread grouping the exchanges of one discussion.
+
+    The title is derived automatically from the first question asked;
+    conversations are owned by a user and deleted with their owner.
+    """
+
+    owner = models.ForeignKey(
+        "auth.User",
+        on_delete=models.CASCADE,
+        related_name="conversations",
+        null=True,
+        blank=True,
+    )
+    title = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Newest conversations first for the sidebar listing."""
+
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        """Return the title for admin and logs readability."""
+        return self.title
+
+
+def build_conversation_title(question):
+    """Derive a conversation title from its first question.
+
+    Args:
+        question: The first question asked in the conversation.
+
+    Returns:
+        A truncated, single-line title of at most 120 characters.
+    """
+    first_line = question.strip().splitlines()[0] if question.strip() else ""
+    return (first_line[:117] + "...") if len(first_line) > 120 else first_line
+
+
 class Query(models.Model):
     """A past exchange powering the chat history feature."""
 
@@ -127,6 +168,13 @@ class Query(models.Model):
         "auth.User",
         on_delete=models.CASCADE,
         related_name="queries",
+        null=True,
+        blank=True,
+    )
+    conversation = models.ForeignKey(
+        Conversation,
+        on_delete=models.CASCADE,
+        related_name="messages",
         null=True,
         blank=True,
     )

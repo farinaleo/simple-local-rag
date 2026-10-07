@@ -1,13 +1,19 @@
 import { motion } from 'framer-motion'
+import { toast } from 'sonner'
 import Markdown from 'react-markdown'
 import { useRef, useState } from 'react'
-
 import { PageHeader, PageTransition } from '@/components/Layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { streamQuery, useQueryHistory } from '@/hooks/queries'
-import type { QueryHistoryItem, QuerySource, StreamEvent } from '@/types'
+import { useSession } from '@/hooks/auth'
+import {
+  streamQuery,
+  useConversation,
+  useConversations,
+  useDeleteConversation,
+} from '@/hooks/queries'
+import type { ConversationDetail, QuerySource, StreamEvent } from '@/types'
 
 interface ChatMessage {
   question: string
@@ -71,48 +77,94 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   )
 }
 
-function HistoryCard({ item, onClick }: { item: QueryHistoryItem; onClick: () => void }) {
+function ConversationCard({
+  title,
+  updatedAt,
+  active,
+  onClick,
+  onDelete,
+}: {
+  title: string
+  updatedAt: string
+  active: boolean
+  onClick: () => void
+  onDelete: () => void
+}) {
   return (
-    <button
-      type="button"
+    <div
+      className={`group flex w-full cursor-pointer items-center gap-2 rounded-2xl border p-3 text-left backdrop-blur transition-all ${
+        active
+          ? 'border-violet-500/60 bg-violet-500/10'
+          : 'border-white/10 bg-white/5 hover:border-violet-500/40 hover:bg-white/[0.08]'
+      }`}
       onClick={onClick}
-      className="group w-full cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-4 text-left backdrop-blur transition-all hover:border-violet-500/40 hover:bg-white/[0.08]"
     >
-      <p className="truncate font-medium text-zinc-100">{item.question}</p>
-      <p className="mt-0.5 truncate text-xs text-zinc-400">
-        {new Date(item.created_at).toLocaleDateString('fr-FR')} · {item.sources.length} source
-        {item.sources.length > 1 ? 's' : ''}
-      </p>
-    </button>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-zinc-100">{title}</p>
+        <p className="mt-0.5 text-xs text-zinc-400">
+          {new Date(updatedAt).toLocaleDateString('fr-FR')}
+        </p>
+      </div>
+      <button
+        type="button"
+        aria-label="Supprimer la conversation"
+        className="rounded-lg p-1.5 text-zinc-500 opacity-0 transition hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
+        onClick={(event) => {
+          event.stopPropagation()
+          onDelete()
+        }}
+      >
+        🗑
+      </button>
+    </div>
   )
 }
 
+function messagesFromConversation(detail: ConversationDetail): ChatMessage[] {
+  return detail.messages.map((message) => ({
+    question: message.question,
+    answer: message.answer,
+    sources: message.sources,
+    error: message.answer.startsWith('[generation failed]'),
+    streaming: false,
+  }))
+}
+
 export default function ChatPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [conversationId, setConversationId] = useState<number | null>(null)
+  const [streamed, setStreamed] = useState<ChatMessage[]>([])
   const [question, setQuestion] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
-  const { data: history } = useQueryHistory()
+  const { data: session } = useSession()
+  const { data: conversations } = useConversations(!!session)
+  const { data: conversationDetail } = useConversation(conversationId, !!session)
+  const deleteConversation = useDeleteConversation()
   const listEndRef = useRef<HTMLDivElement | null>(null)
+
+  const loadedMessages = conversationDetail ? messagesFromConversation(conversationDetail) : []
 
   const send = async () => {
     const trimmed = question.trim()
     if (!trimmed || isStreaming) return
     setQuestion('')
     setIsStreaming(true)
-    const index = messages.length
-    setMessages((prev) => [
+    const index = streamed.length
+    setStreamed((prev) => [
       ...prev,
       { question: trimmed, answer: '', sources: [], error: false, streaming: true },
     ])
     try {
-      await streamQuery(trimmed, (event: StreamEvent) => {
-        setMessages((prev) => {
+      await streamQuery(trimmed, conversationId, (event: StreamEvent) => {
+        setStreamed((prev) => {
           const next = [...prev]
           const current = { ...next[index] }
           if (event.type === 'token') current.answer += event.text
           else if (event.type === 'sources') {
             current.sources = event.sources
             current.streaming = false
+            if (conversationId === null && event.conversationId !== null) {
+              setConversationId(event.conversationId)
+            }
           } else if (event.type === 'error') {
             current.answer = event.detail
             current.error = true
@@ -124,7 +176,7 @@ export default function ChatPage() {
         listEndRef.current?.scrollIntoView({ behavior: 'smooth' })
       })
     } catch {
-      setMessages((prev) => {
+      setStreamed((prev) => {
         const next = [...prev]
         next[index] = {
           ...next[index],
@@ -140,17 +192,23 @@ export default function ChatPage() {
     }
   }
 
-  const restoreHistory = (item: QueryHistoryItem) => {
+  const startNewConversation = () => {
     if (isStreaming) return
-    setMessages([
-      {
-        question: item.question,
-        answer: item.answer,
-        sources: item.sources,
-        error: item.answer.startsWith('[generation failed]'),
-        streaming: false,
+    setConversationId(null)
+    setStreamed([])
+  }
+
+  const removeConversation = (id: number) => {
+    deleteConversation.mutate(id, {
+      onSuccess: () => {
+        toast.success('Conversation supprimée')
+        if (conversationId === id) {
+          setConversationId(null)
+          setStreamed([])
+        }
       },
-    ])
+      onError: (error) => toast.error(error.message),
+    })
   }
 
   return (
@@ -158,67 +216,98 @@ export default function ChatPage() {
       <div className="space-y-6">
         <PageHeader
           title="Chats"
-          subtitle="Discutez avec votre RAG et retrouvez vos dernières discussions."
+          subtitle="Discutez avec votre RAG et retrouvez vos conversations."
         />
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.08 }}
-          className="flex h-[560px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur"
-        >
-          <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-sm shadow-lg shadow-violet-600/25">
-              💬
-            </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate font-semibold text-zinc-100">Discussion en cours</h2>
-              <p className="text-xs text-zinc-400">{new Date().toLocaleDateString('fr-FR')}</p>
-            </div>
-          </div>
-
-          <ScrollArea className="flex-1 px-4">
-            <div className="space-y-4 py-4">
-              {messages.length === 0 && (
-                <div className="py-16 text-center text-sm text-zinc-500">
-                  Posez votre première question sur vos documents ✨
-                </div>
-              )}
-              {messages.map((message, index) => (
-                <MessageBubble key={index} message={message} />
-              ))}
-              <div ref={listEndRef} />
-            </div>
-          </ScrollArea>
-
-          <div className="flex gap-2 border-t border-white/10 p-3">
-            <Input
-              className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-violet-500/50"
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              onKeyDown={(event) => event.key === 'Enter' && void send()}
-              placeholder="Posez une question sur vos documents…"
-              disabled={isStreaming}
-            />
+        <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+          <motion.div
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35 }}
+            className="space-y-3"
+          >
             <Button
-              className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/25 transition-transform hover:scale-[1.03] hover:from-violet-500 hover:to-fuchsia-500"
-              onClick={() => void send()}
-              disabled={isStreaming || question.trim() === ''}
+              className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/25 transition-transform hover:scale-[1.02] hover:from-violet-500 hover:to-fuchsia-500"
+              onClick={startNewConversation}
+              disabled={isStreaming}
             >
-              Envoyer ↑
+              ＋ Nouvelle discussion
             </Button>
-          </div>
-        </motion.div>
+            <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Conversations
+            </h2>
+            <ScrollArea className="h-[480px] pr-2">
+              <div className="space-y-2">
+                {(conversations ?? []).map((conversation) => (
+                  <ConversationCard
+                    key={conversation.id}
+                    title={conversation.title}
+                    updatedAt={conversation.updated_at}
+                    active={conversation.id === conversationId}
+                    onClick={() => setConversationId(conversation.id)}
+                    onDelete={() => removeConversation(conversation.id)}
+                  />
+                ))}
+                {conversations?.length === 0 && (
+                  <p className="px-1 py-8 text-center text-xs text-zinc-500">
+                    Aucune conversation pour l'instant.
+                  </p>
+                )}
+              </div>
+            </ScrollArea>
+          </motion.div>
 
-        <div className="space-y-3">
-          <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Dernières discussions
-          </h2>
-          <div className="space-y-2">
-            {(history ?? []).slice(0, 5).map((item) => (
-              <HistoryCard key={item.id} item={item} onClick={() => restoreHistory(item)} />
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.08 }}
+            className="flex h-[560px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur"
+          >
+            <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-sm shadow-lg shadow-violet-600/25">
+                💬
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate font-semibold text-zinc-100">
+                  {conversationDetail?.title ?? 'Nouvelle discussion'}
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  {conversationId === null
+                    ? 'Une question ouvrira une nouvelle conversation'
+                    : 'Reprenez la discussion là où vous l’avez laissée'}
+                </p>
+              </div>
+            </div>
+            <ScrollArea className="flex-1 px-4">
+              <div className="space-y-4 py-4">
+                {loadedMessages.length + streamed.length === 0 && (
+                  <div className="py-16 text-center text-sm text-zinc-500">
+                    Posez votre première question sur vos documents ✨
+                  </div>
+                )}
+                {[...loadedMessages, ...streamed].map((message, index) => (
+                  <MessageBubble key={index} message={message} />
+                ))}
+                <div ref={listEndRef} />
+              </div>
+            </ScrollArea>
+            <div className="flex gap-2 border-t border-white/10 p-3">
+              <Input
+                className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-violet-500/50"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                onKeyDown={(event) => event.key === 'Enter' && void send()}
+                placeholder="Posez une question sur vos documents…"
+                disabled={isStreaming}
+              />
+              <Button
+                className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/25 transition-transform hover:scale-[1.03] hover:from-violet-500 hover:to-fuchsia-500"
+                onClick={() => void send()}
+                disabled={isStreaming || question.trim() === ''}
+              >
+                Envoyer ↑
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </div>
     </PageTransition>
