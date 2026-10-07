@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ## Fixed
+- 🐛(docker) raise nginx body limit for avatar uploads (413 fix) #TBD
 - 🐛(docker) fix nginx proxying to stale container ips #51
 
 ## Added
