@@ -22,5 +22,5 @@ class BearerTokenAuthenticationExtension(OpenApiAuthenticationExtension):
             The OpenAPI security scheme for bearer tokens.
         """
         return build_bearer_security_scheme_object(
-            "bearerAuth", "Bearer token created on the profile page"
+            "Authorization", "Bearer", "Bearer token created on the profile page"
         )
