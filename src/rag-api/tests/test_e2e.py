@@ -97,7 +97,7 @@ def eager_pipeline(settings, monkeypatch, tmp_path):
     monkeypatch.setattr("ingestion.embedding.get_embedding_model", lambda: FakeEmbeddingModel())
     monkeypatch.setattr(
         "queries.views.generate_answer",
-        lambda question, chunks: ("", CANNED_ANSWER),
+        lambda question, chunks, history=None: ("", CANNED_ANSWER),
     )
     monkeypatch.setenv("UPLOAD_DIR", str(tmp_path / "uploads"))
     monkeypatch.setattr(
