@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "corsheaders",
     "health",
     "documents",
@@ -77,7 +78,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "config" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -116,12 +117,21 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "accounts.token_auth.BearerTokenAuthentication",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.ScopedRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
         "auth": "10/min",
     },
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Simple Local RAG API",
+    "DESCRIPTION": "RAG API for documents and chat answers. External clients "
+    "authenticate with a Bearer token created on the profile page.",
+    "VERSION": "4.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 LANGUAGE_CODE = "en-us"

@@ -1,0 +1,13 @@
+{% extends "drf_spectacular/swagger_ui.html" %}
+{% block body %}
+<div style="padding: 8px 16px; background: #fafbfc; border-bottom: 1px solid #e0e0e0;">
+  <a
+    href="/api/schema.json/"
+    download="simple-local-rag-openapi.json"
+    style="font-family: sans-serif; font-size: 14px; color: #1a73e8; text-decoration: none;"
+  >
+    ⬇ Download OpenAPI schema (JSON)
+  </a>
+</div>
+{{ block.super }}
+{% endblock body %}

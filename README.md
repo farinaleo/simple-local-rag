@@ -270,6 +270,49 @@ defaults to `auto`, which falls back to CPU when no GPU is visible).
   the default setup.
 ---
 
+## 🔌 External API access
+
+The API is consumable from external tools (CLI, scripts, other apps) with a
+Bearer token created on the profile page (`Mon compte` -> Tokens API).
+
+### Endpoints
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/schema/` | OpenAPI 3 schema of the whole API |
+| `GET /api/docs/` | Browsable Swagger documentation |
+| `POST /api/documents/` | Upload a document (txt, md, pdf, docx) |
+| `GET /api/documents/` | List your documents |
+| `DELETE /api/documents/{id}/` | Delete a document |
+| `POST /api/query/` | Ask a question (SSE-streamed answer) |
+
+### Quick start
+
+1. Log into the web UI, open `Mon compte`, create an API token with the
+   scopes you need (`documents:read`, `documents:write`, `query`) and copy
+   the one-time plaintext (`rag_...`).
+2. Call the API with `Authorization: Bearer <token>`:
+
+```bash
+TOKEN="rag_..."
+BASE="http://localhost:8080"
+
+# upload a document
+curl -s -X POST "$BASE/api/documents/" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@notes.txt"
+
+# ask a question (SSE stream)
+curl -N -X POST "$BASE/api/query/" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What are the key points?"}'
+```
+
+Tokens are stored hashed (SHA-256), can be paused or revoked at any time,
+and never grant admin endpoints. Invalid tokens are rejected (they never
+fall back to anonymous access).
+
 ## 📐 ADRs
 
 Architecture decisions are recorded in [`docs/benchmarks/`](docs/benchmarks/)
