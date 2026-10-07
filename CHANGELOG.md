@@ -13,6 +13,7 @@
 - ✨(backend) make openapi schema version configurable via api version #63
 - ✨(frontend) group chat history into per-conversation threads with deletion #52
 - ✨(backend) send the conversation history as context to the generator #52
+- 📝(docs) add validated debug=false production checklist and profile tests #64
 - ✨(backend) add admin oversight of all user api tokens #59
 - ✨(frontend) add user profile page with avatar and token management #57
 - ✨(backend) add self-service api tokens with scopes and throttle #56
