@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { API_BASE_URL, getCsrfToken } from '@/api'
+import { toApiError } from '@/lib/apiError'
 import type { DocumentItem } from '@/types'
 
 const documentsKey = ['documents'] as const
@@ -8,7 +9,7 @@ async function fetchDocuments(): Promise<DocumentItem[]> {
   const response = await fetch(`${API_BASE_URL}/api/documents/`, {
     credentials: 'include',
   })
-  if (!response.ok) throw new Error(`documents: ${response.status}`)
+  if (!response.ok) throw await toApiError(response)
   return response.json()
 }
 
@@ -41,7 +42,7 @@ export function useUploadDocument() {
       })
       const payload = await response.json().catch(() => null)
       if (!response.ok) {
-        throw new Error(payload?.detail ?? `upload failed (${response.status})`)
+        throw await toApiError(response)
       }
       return payload as DocumentItem
     },
@@ -60,7 +61,7 @@ export function useDeleteDocument() {
         headers: { 'X-CSRFToken': getCsrfToken() },
       })
       if (!response.ok && response.status !== 404) {
-        throw new Error(`delete failed (${response.status})`)
+        throw await toApiError(response)
       }
     },
     onMutate: async (id: number) => {

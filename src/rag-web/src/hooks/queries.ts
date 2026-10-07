@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { API_BASE_URL, getCsrfToken } from '@/api'
+import { toApiError } from '@/lib/apiError'
 import type { QueryHistoryItem, QuerySource, StreamEvent } from '@/types'
 
 export function useQueryHistory() {
@@ -47,7 +48,7 @@ export async function streamQuery(
     body: JSON.stringify({ question }),
   })
   if (!response.ok || !response.body) {
-    throw new Error(`Query failed (${response.status})`)
+    throw await toApiError(response)
   }
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
