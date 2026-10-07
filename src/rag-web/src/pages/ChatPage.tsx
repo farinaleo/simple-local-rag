@@ -233,7 +233,7 @@ export default function ChatPage() {
             <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
               Conversations
             </h2>
-            <ScrollArea className="min-h-0 flex-1 pr-2">
+            <div className="min-h-0 flex-1 overflow-y-auto pr-2">
               <div className="space-y-2">
                 {(conversations ?? []).map((conversation) => (
                   <ConversationCard
@@ -251,7 +251,7 @@ export default function ChatPage() {
                   </p>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           </motion.div>
 
           <motion.div
