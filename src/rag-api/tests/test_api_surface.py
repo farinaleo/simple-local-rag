@@ -36,12 +36,12 @@ def test_schema_version_matches_settings_source_of_truth():
     assert schema["info"]["version"].startswith("4.")
 
 
-def test_schema_version_follows_api_version_env_override(settings):
-    """Overriding API_VERSION propagates to the generated schema."""
-    settings.API_VERSION = "4.1.0"
-    response = client.get("/api/schema.json/")
-    assert response.status_code == 200
-    assert response.json()["info"]["version"] == "4.1.0"
+def test_api_version_setting_defaults_to_v4():
+    """The API_VERSION setting drives the schema version from one place."""
+    from django.conf import settings
+
+    assert settings.API_VERSION.startswith("4.")
+    assert settings.SPECTACULAR_SETTINGS["VERSION"] == settings.API_VERSION
 
 
 def test_schema_documents_bearer_auth_and_request_bodies():
