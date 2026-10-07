@@ -223,7 +223,7 @@ export default function ChatPage() {
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35 }}
-            className="space-y-3"
+            className="flex h-[560px] flex-col space-y-3"
           >
             <Button
               className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/25 transition-transform hover:scale-[1.02] hover:from-violet-500 hover:to-fuchsia-500"
@@ -235,7 +235,7 @@ export default function ChatPage() {
             <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
               Conversations
             </h2>
-            <ScrollArea className="h-[480px] pr-2">
+            <ScrollArea className="min-h-0 flex-1 pr-2">
               <div className="space-y-2">
                 {(conversations ?? []).map((conversation) => (
                   <ConversationCard
