@@ -37,7 +37,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(group_orphan_queries, migrations.RunPython.noop),
         migrations.CreateModel(
             name="Conversation",
             fields=[
@@ -60,6 +59,7 @@ class Migration(migrations.Migration):
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
+                migrations.RunPython(group_orphan_queries, migrations.RunPython.noop),
             ],
             options={
                 "ordering": ["-updated_at"],
