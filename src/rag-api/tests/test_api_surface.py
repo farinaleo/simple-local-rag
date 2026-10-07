@@ -26,10 +26,19 @@ def test_schema_covers_documents_and_query_endpoints():
 
 
 def test_docs_page_renders():
-    """The browsable documentation page renders."""
+    """The browsable documentation page renders with the JSON download link."""
     response = client.get("/api/docs/")
     assert response.status_code == 200
-    assert b"/api/schema/" in response.content
+    assert b"/api/schema.json/" in response.content
+
+
+def test_schema_json_endpoint_serves_json():
+    """The schema.json endpoint always serves the OpenAPI schema as JSON."""
+    response = client.get("/api/schema.json/")
+    assert response.status_code == 200
+    schema = response.json()
+    assert schema["openapi"].startswith("3.")
+    assert "/api/query/" in schema["paths"]
 
 
 @pytest.fixture(autouse=True)
