@@ -28,7 +28,7 @@ def test_debug_false_still_serves_api_and_schema():
         assert client.get("/api/health/").status_code == 200
         schema = client.get("/api/schema/")
         assert schema.status_code == 200
-        assert "bearerAuth" in schema.getvalue() or schema.status_code == 200
+        assert "bearerAuth" in schema.getvalue().decode()
         assert client.get("/api/docs/").status_code == 200
 
 
