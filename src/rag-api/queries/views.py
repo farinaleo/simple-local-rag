@@ -5,7 +5,8 @@ import logging
 
 from django.db import transaction
 from django.http import StreamingHttpResponse
-from rest_framework import status
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -18,11 +19,28 @@ from rag_core.retriever import retrieve_chunks
 logger = logging.getLogger(__name__)
 
 
+class QueryRequestSerializer(serializers.Serializer):
+    """Body of a chat query: the question to answer."""
+
+    question = serializers.CharField(help_text="The question to answer.")
+
+
 class QueryView(APIView):
     """Answer a question with Server-Sent Events streaming."""
 
     permission_classes = [QueryPermission]
 
+    @extend_schema(
+        request=QueryRequestSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="Server-Sent Events stream: `token` events carrying "
+                "answer pieces, then a final `sources` event with the chunk "
+                "references.",
+            ),
+            400: OpenApiResponse(description="No question provided."),
+        },
+    )
     def post(self, request):
         """Stream a grounded answer, then persist it with its sources.
 
@@ -145,6 +163,7 @@ def _record_failed_query(question, error, user=None):
 class QueryHistoryView(APIView):
     """Past exchanges for the frontend history panel."""
 
+    @extend_schema(responses=QuerySerializer(many=True))
     def get(self, request):
         """Return the past queries newest-first with their sources."""
         queryset = Query.objects.prefetch_related("sources").all()
