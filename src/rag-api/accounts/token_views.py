@@ -1,10 +1,18 @@
 """API token management views: create, list, pause, revoke."""
 
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.schema_serializers import (
+    _many,
+    _token_create_request,
+    _token_response,
+    _token_update_request,
+    _token_with_secret_response,
+)
 from accounts.token_auth import BearerTokenAuthentication
 from accounts.token_models import DEFAULT_SCOPES, Scope, generate_token
 
@@ -31,11 +39,16 @@ class TokenListView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: _many(_token_response)})
     def get(self, request):
         """List the caller's tokens; the plaintext never appears again."""
         tokens = request.user.api_tokens.all()
         return Response([_token_payload(token) for token in tokens])
 
+    @extend_schema(
+        request=_token_create_request,
+        responses={201: _token_with_secret_response, 400: OpenApiResponse()},
+    )
     def post(self, request):
         """Create a token; the plaintext is returned exactly once.
 
@@ -75,6 +88,10 @@ class TokenDetailView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=_token_update_request,
+        responses={200: _token_response, 404: OpenApiResponse()},
+    )
     def patch(self, request, token_id):
         """Pause or resume a token; paused tokens reject immediately.
 
@@ -96,6 +113,7 @@ class TokenDetailView(APIView):
             token.save(update_fields=["is_active"])
         return Response(_token_payload(token))
 
+    @extend_schema(responses={204: OpenApiResponse(), 404: OpenApiResponse()})
     def delete(self, request, token_id):
         """Revoke a token permanently.
 

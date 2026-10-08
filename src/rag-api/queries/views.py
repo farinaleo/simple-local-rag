@@ -295,6 +295,7 @@ class ConversationDetailView(APIView):
         serializer = ConversationDetailSerializer(conversation)
         return Response(serializer.data)
 
+    @extend_schema(responses={204: OpenApiResponse(), 404: OpenApiResponse()})
     def delete(self, request, pk):
         """Delete a conversation and its messages."""
         conversation = self._get_conversation(request, pk)

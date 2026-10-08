@@ -137,6 +137,10 @@ SPECTACULAR_SETTINGS = {
     "authenticate with a Bearer token created on the profile page.",
     "VERSION": API_VERSION,
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "DocumentStatusEnum": "documents.models.DocumentStatus.choices",
+        "TokenStatusEnum": "accounts.schema_serializers.TOKEN_STATUS_CHOICES",
+    },
 }
 
 LANGUAGE_CODE = "en-us"

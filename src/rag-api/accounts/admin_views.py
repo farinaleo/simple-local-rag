@@ -3,12 +3,24 @@
 import secrets
 
 from django.contrib.auth.models import User
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import Profile, Role
 from accounts.permissions import IsAdmin
+from accounts.schema_serializers import (
+    _admin_token_response,
+    _admin_user_create_request,
+    _admin_user_created_response,
+    _admin_user_response,
+    _admin_user_update_request,
+    _admin_user_updated_response,
+    _many,
+    _token_response,
+    _token_update_request,
+)
 from accounts.token_auth import BearerTokenAuthentication
 from accounts.token_models import ApiToken
 from accounts.token_views import TOKEN_AUTH_FORBIDDEN, _token_payload
@@ -46,11 +58,16 @@ class AdminUserListView(APIView):
 
     permission_classes = [IsAdmin]
 
+    @extend_schema(responses={200: _many(_admin_user_response)})
     def get(self, request):
         """List every account with role, status and password flag."""
         users = User.objects.order_by("id")
         return Response([_user_payload(user) for user in users])
 
+    @extend_schema(
+        request=_admin_user_create_request,
+        responses={201: _admin_user_created_response, 400: OpenApiResponse()},
+    )
     def post(self, request):
         """Create an account with a temporary password to change at first login.
 
@@ -87,6 +104,14 @@ class AdminUserDetailView(APIView):
 
     permission_classes = [IsAdmin]
 
+    @extend_schema(
+        request=_admin_user_update_request,
+        responses={
+            200: _admin_user_updated_response,
+            400: OpenApiResponse(),
+            404: OpenApiResponse(),
+        },
+    )
     def patch(self, request, user_id):
         """Block or unblock an account, or regenerate a temporary password.
 
@@ -125,6 +150,9 @@ class AdminUserDetailView(APIView):
             payload["temporary_password"] = temp_password
         return Response({**_user_payload(user), **payload})
 
+    @extend_schema(
+        responses={204: OpenApiResponse(), 400: OpenApiResponse(), 404: OpenApiResponse()}
+    )
     def delete(self, request, user_id):
         """Delete an account, guarding the last admin.
 
@@ -176,6 +204,7 @@ class AdminTokenListView(APIView):
 
     permission_classes = [IsAdmin]
 
+    @extend_schema(responses={200: _many(_admin_token_response)})
     def get(self, request):
         """List all tokens with their owner, never exposing the hash."""
         if isinstance(request.successful_authenticator, BearerTokenAuthentication):
@@ -191,6 +220,10 @@ class AdminTokenDetailView(APIView):
 
     permission_classes = [IsAdmin]
 
+    @extend_schema(
+        request=_token_update_request,
+        responses={200: _token_response, 404: OpenApiResponse()},
+    )
     def patch(self, request, token_id):
         """Pause or resume any user's token.
 
@@ -211,6 +244,7 @@ class AdminTokenDetailView(APIView):
             token.save(update_fields=["is_active"])
         return Response(_token_payload(token))
 
+    @extend_schema(responses={204: OpenApiResponse(), 404: OpenApiResponse()})
     def delete(self, request, token_id):
         """Revoke any user's token permanently.
 

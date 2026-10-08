@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ## Added
+- ✨(backend) document accounts api in the openapi schema #72
 - ✨(frontend) fit chat bubble size to the message text #75
 - ✨(backend) stream answers token by token with a real model streamer #68
 - ✨(backend) add max-distance ceiling and distance scores to chunk retrieval #68

@@ -4,7 +4,7 @@ import mimetypes
 import os
 
 from django.db import transaction
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -159,6 +159,10 @@ class DocumentDetailView(APIView):
         serializer = DocumentDetailSerializer(document)
         return Response(serializer.data)
 
+    @extend_schema(
+        operation_id="documents_destroy",
+        responses={204: OpenApiResponse(), 404: OpenApiResponse()},
+    )
     def delete(self, request, pk):
         """Delete file, row, chunks and embeddings in one transaction.
 
@@ -186,6 +190,14 @@ class DocumentDetailView(APIView):
             document.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @extend_schema(
+        operation_id="documents_visibility_update",
+        request=inline_serializer(
+            name="DocumentVisibilityUpdate",
+            fields={"visibility": serializers.ChoiceField(choices=DocumentVisibility.values)},
+        ),
+        responses={200: DocumentDetailSerializer, 400: OpenApiResponse(), 404: OpenApiResponse()},
+    )
     def patch(self, request, pk):
         """Toggle the visibility of a document owned by the user.
 
