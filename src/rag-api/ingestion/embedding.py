@@ -12,7 +12,8 @@ def get_embedding_model():
     ``EMBED_NAME`` environment variable, HF cache location from
     ``HF_HOME`` (must be set before importing the model). The
     ``RAG_DEVICE`` environment variable selects the device
-    (``cpu``, ``cuda`` or ``auto``, default ``auto``).
+    (``cpu``, ``mps`` (Apple Silicon GPU), ``cuda`` or ``auto``, default
+    ``auto``).
 
     Returns:
         The cached sentence-transformers model instance.

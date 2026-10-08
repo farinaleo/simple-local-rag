@@ -227,7 +227,7 @@ make down          # stop everything, keep the volumes
 | `CHUNK_SIZE` | `500` | Max characters per chunk |
 | `MAX_NEW_TOKENS` | `512` | Generation budget |
 | `ENABLE_THINKING` | `false` | Qwen3 thinking mode |
-| `RAG_DEVICE` | `auto` | Inference device: `auto`, `cpu` or `cuda` |
+| `RAG_DEVICE` | `auto` | Inference device: `auto`, `cpu`, `mps` (Apple Silicon GPU) or `cuda` |
 
 Real environment variables override `.env` values.
 
