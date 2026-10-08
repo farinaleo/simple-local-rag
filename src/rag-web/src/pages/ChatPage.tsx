@@ -49,7 +49,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         transition={{ duration: 0.25 }}
         className="flex justify-end"
       >
-        <div className="max-w-[80%] rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-sm leading-relaxed text-white shadow-lg shadow-violet-600/20">
+        <div className="w-fit max-w-[80%] rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2.5 text-sm leading-relaxed text-white shadow-lg shadow-violet-600/20">
           {message.question}
         </div>
       </motion.div>
@@ -60,7 +60,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         className="flex justify-start"
       >
         <div className="max-w-[80%] space-y-1.5">
-          <div className="rounded-2xl border border-white/10 bg-zinc-800/80 px-4 py-2.5 text-sm leading-relaxed text-zinc-100">
+          <div className="w-fit max-w-full rounded-2xl border border-white/10 bg-zinc-800/80 px-4 py-2.5 text-sm leading-relaxed text-zinc-100 [&_p:first-child]:mt-0 [&_p]:mt-2 [&_p:last-child]:mb-0">
             {message.error ? (
               <p className="text-red-400">{message.answer}</p>
             ) : (
