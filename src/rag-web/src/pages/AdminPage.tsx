@@ -191,6 +191,9 @@ function AdminPage() {
 
       <div className="flex items-center gap-2">
         <Input
+          type="search"
+          autoComplete="off"
+          spellCheck={false}
           className="max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
           placeholder="Rechercher un compte…"
           value={userSearch}
@@ -281,6 +284,9 @@ function AdminPage() {
         </h3>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Input
+            type="search"
+            autoComplete="off"
+            spellCheck={false}
             className="max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
             placeholder="Rechercher par token ou utilisateur…"
             value={tokenSearch}
@@ -288,7 +294,6 @@ function AdminPage() {
           />
           <Button
             variant="outline"
-            size="sm"
             className="rounded-xl"
             onClick={() => setTokenSort((sort) => (sort === 'status' ? 'user' : 'status'))}
           >
