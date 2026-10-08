@@ -2,6 +2,7 @@
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -9,6 +10,14 @@ from rest_framework.views import APIView
 
 from accounts.models import Profile, Role
 from accounts.permissions import IsAdmin, other_admins_excluding
+from accounts.schema_serializers import (
+    _admin_user_response,
+    _credentials_request,
+    _many,
+    _me_response,
+    _role_update_request,
+    _user_response,
+)
 
 
 class RegisterView(APIView):
@@ -16,6 +25,10 @@ class RegisterView(APIView):
 
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=_credentials_request,
+        responses={201: _user_response, 400: OpenApiResponse()},
+    )
     def post(self, request):
         """Register a user with username and password, then log them in.
 
@@ -49,6 +62,10 @@ class LoginView(APIView):
 
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=_credentials_request,
+        responses={200: _user_response, 400: OpenApiResponse()},
+    )
     def post(self, request):
         """Authenticate with username and password and log the user in.
 
@@ -72,6 +89,7 @@ class LogoutView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=None, responses={204: OpenApiResponse()})
     def post(self, request):
         """Log the user out and clear the session cookie."""
         logout(request)
@@ -83,6 +101,7 @@ class MeView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: _me_response})
     def get(self, request):
         """Return the id, username, role and password flag of the user."""
         profile = getattr(request.user, "profile", None)
@@ -103,6 +122,7 @@ class UserListView(APIView):
 
     permission_classes = [IsAdmin]
 
+    @extend_schema(responses={200: _many(_admin_user_response)})
     def get(self, request):
         """Return every user with id, username and role."""
         users = User.objects.select_related("profile").order_by("id")
@@ -122,6 +142,10 @@ class UserRoleView(APIView):
 
     permission_classes = [IsAdmin]
 
+    @extend_schema(
+        request=_role_update_request,
+        responses={200: _user_response, 400: OpenApiResponse(), 404: OpenApiResponse()},
+    )
     def patch(self, request, user_id):
         """Change the role of an account, guarding the last admin.
 
@@ -149,6 +173,9 @@ class UserRoleView(APIView):
         profile.save(update_fields=["role"])
         return Response({"id": user.pk, "username": user.username, "role": profile.role})
 
+    @extend_schema(
+        responses={204: OpenApiResponse(), 400: OpenApiResponse(), 404: OpenApiResponse()},
+    )
     def delete(self, request, user_id):
         """Delete an account, guarding the last admin.
 

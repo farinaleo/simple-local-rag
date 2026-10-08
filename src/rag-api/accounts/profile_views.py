@@ -1,12 +1,18 @@
 """Self-service profile views: display name, avatar, password change."""
 
 from django.contrib.auth import authenticate
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import Profile
+from accounts.schema_serializers import (
+    _password_change_request,
+    _profile_response,
+    _profile_update_request,
+)
 
 AVATAR_MAX_BYTES = 5 * 1024 * 1024
 AVATAR_TYPES = {"image/png", "image/jpeg"}
@@ -32,10 +38,15 @@ class ProfileView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: _profile_response})
     def get(self, request):
         """Return the caller's profile."""
         return Response(_profile_payload(request.user))
 
+    @extend_schema(
+        request=_profile_update_request,
+        responses={200: _profile_response, 400: OpenApiResponse()},
+    )
     def patch(self, request):
         """Update the display name and/or the avatar.
 
@@ -75,6 +86,10 @@ class ChangePasswordView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=_password_change_request,
+        responses={204: OpenApiResponse(), 400: OpenApiResponse()},
+    )
     def post(self, request):
         """Change the caller's password and revoke their other sessions.
 
