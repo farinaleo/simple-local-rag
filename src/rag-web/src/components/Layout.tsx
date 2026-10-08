@@ -85,7 +85,7 @@ export default function Layout() {
               <>
                 <button
                   type="button"
-                  className="flex items-center rounded-full transition-transform hover:scale-105 lg:min-w-0 lg:flex-1"
+                  className="flex items-center rounded-full transition-transform hover:scale-105 lg:hidden"
                   title={profile?.display_name ?? session.username}
                   onClick={() => navigate('/account')}
                 >
