@@ -15,8 +15,9 @@ def _load_generation_model():
     Model name from the ``MODEL_NAME`` environment variable
     (default: Qwen3-0.6B); HF_HOME is expected to be set before the
     first import, as in the POC. The ``RAG_DEVICE`` environment
-    variable selects the inference device: ``cpu``, ``cuda`` or
-    ``auto`` (default, accelerate picks the best available).
+    variable selects the inference device: ``cpu``, ``mps`` (Apple
+    Silicon GPU), ``cuda`` or ``auto`` (default, accelerate picks
+    the best available).
 
     Returns:
         The (tokenizer, model) pair.
@@ -29,9 +30,9 @@ def _load_generation_model():
         model_name = os.environ.get("MODEL_NAME", "Qwen/Qwen3-0.6B")
         _TOKENIZER = AutoTokenizer.from_pretrained(model_name)
         device = os.environ.get("RAG_DEVICE", "auto")
-        if device == "cpu":
+        if device in ("cpu", "mps"):
             _MODEL = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto")
-            _MODEL.to("cpu")
+            _MODEL.to(device)
         else:
             _MODEL = AutoModelForCausalLM.from_pretrained(
                 model_name, torch_dtype="auto", device_map=device
@@ -124,6 +125,50 @@ def parse_output(output_ids):
     thinking = tokenizer.decode(output_ids[:index], skip_special_tokens=True).strip("\n")
     content = tokenizer.decode(output_ids[index:], skip_special_tokens=True).strip("\n")
     return thinking, content
+
+
+def stream_answer(question, retrieved_chunks, history=None):
+    """Stream the answer of a grounded question token by token.
+
+    Args:
+        question: The user question.
+        retrieved_chunks: The chunk texts providing the context.
+        history: The previous exchanges of the conversation, oldest
+            first, each as a ``(question, answer)`` pair.
+
+    Yields:
+        The answer pieces as they are produced by the model; thinking
+        content (Qwen3 ``<think>`` blocks) is skipped when thinking is
+        disabled and streamed after it when enabled.
+    """
+    from threading import Thread
+
+    from transformers import TextIteratorStreamer
+
+    tokenizer, model = _load_generation_model()
+    messages = build_messages(question, retrieved_chunks, history=history)
+    model_inputs = produce_model_input(messages)
+    max_new_tokens = int(os.environ.get("MAX_NEW_TOKENS", "512"))
+    enable_thinking = os.environ.get("ENABLE_THINKING", "false").lower() == "true"
+
+    streamer = TextIteratorStreamer(
+        tokenizer, skip_prompt=True, skip_special_tokens=True, timeout=300.0
+    )
+
+    def _generate():
+        try:
+            model.generate(**model_inputs, max_new_tokens=max_new_tokens, streamer=streamer)
+        except Exception:
+            streamer.end()
+            raise
+
+    thread = Thread(target=_generate)
+    thread.start()
+    for piece in streamer:
+        if not enable_thinking and "</think>" in piece:
+            continue
+        yield piece
+    thread.join()
 
 
 def generate_answer(question, retrieved_chunks, history=None):

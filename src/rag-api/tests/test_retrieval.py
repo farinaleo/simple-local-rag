@@ -74,3 +74,41 @@ def test_search_skips_chunks_without_embedding(document):
 def test_search_with_no_matches_returns_empty_list():
     """A query against an empty knowledge base returns an empty list."""
     assert search_similar_chunks(_vector(0), top_k=3) == []
+
+
+def test_search_annotates_distance(document):
+    """Each result carries its cosine distance for ranking observability."""
+    _make_chunk(document, 0, "near", _vector(0))
+
+    results = search_similar_chunks(_vector(0), top_k=1)
+
+    assert len(results) == 1
+    assert results[0].distance == pytest.approx(0.0, abs=1e-6)
+
+
+def test_search_drops_chunks_farther_than_max_distance(document):
+    """Chunks beyond the max_distance ceiling are excluded."""
+    _make_chunk(document, 0, "near", _vector(0))
+    _make_chunk(document, 1, "orthogonal", _vector(1))
+
+    results = search_similar_chunks(_vector(0), top_k=3, max_distance=0.5)
+
+    assert [chunk.content for chunk in results] == ["near"]
+
+
+def test_search_max_distance_can_return_empty(document):
+    """A strict ceiling may return fewer chunks than top_k, even zero."""
+    _make_chunk(document, 0, "orthogonal", _vector(1))
+
+    results = search_similar_chunks(_vector(0), top_k=3, max_distance=0.5)
+
+    assert results == []
+
+
+def test_search_without_max_distance_keeps_all(document):
+    """Without a ceiling, top_k results come back whatever the distance."""
+    _make_chunk(document, 0, "orthogonal", _vector(1))
+
+    results = search_similar_chunks(_vector(0), top_k=3)
+
+    assert [chunk.content for chunk in results] == ["orthogonal"]

@@ -20,7 +20,7 @@ from queries.serializers import (
     ConversationSerializer,
     QuerySerializer,
 )
-from rag_core.generator import generate_answer
+from rag_core.generator import stream_answer
 from rag_core.retriever import retrieve_chunks
 
 logger = logging.getLogger(__name__)
@@ -152,17 +152,18 @@ def _sse_stream(question, chunks, chunk_texts, user=None, conversation=None, his
         user: The requesting user, recorded on the Query row.
         conversation: The conversation the exchange belongs to.
     """
+    pieces = []
     try:
-        _thinking, content = generate_answer(question, chunk_texts, history=history)
+        for piece in stream_answer(question, chunk_texts, history=history):
+            pieces.append(piece)
+            yield _sse_event("token", {"text": piece})
     except Exception as error:  # noqa: BLE001 — surfaced to the client
         logger.exception("query generation failed")
         _record_failed_query(question, str(error), user=user, conversation=conversation)
         yield _sse_event("error", {"detail": "generation failed"})
         return
 
-    for piece in _split_answer_pieces(content):
-        yield _sse_event("token", {"text": piece})
-
+    content = "".join(pieces).strip("\n")
     query = _record_query(question, content, chunks, user=user, conversation=conversation)
     sources = QuerySerializer(query).data["sources"]
     yield _sse_event(
@@ -173,18 +174,6 @@ def _sse_stream(question, chunks, chunk_texts, user=None, conversation=None, his
             "sources": sources,
         },
     )
-
-
-def _split_answer_pieces(answer):
-    """Split an answer into streamed pieces.
-
-    Args:
-        answer: The complete generated answer.
-
-    Returns:
-        The answer split into word-level pieces for progressive display.
-    """
-    return [f"{piece} " for piece in answer.split(" ") if piece]
 
 
 def _sse_event(event, data):
