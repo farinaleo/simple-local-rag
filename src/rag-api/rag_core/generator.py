@@ -150,20 +150,24 @@ def stream_answer(question, retrieved_chunks, history=None):
     max_new_tokens = int(os.environ.get("MAX_NEW_TOKENS", "512"))
     enable_thinking = os.environ.get("ENABLE_THINKING", "false").lower() == "true"
 
-    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
-    generation_kwargs = {
-        **model_inputs,
-        "max_new_tokens": max_new_tokens,
-        "streamer": streamer,
-    }
-    if not enable_thinking:
-        generation_kwargs["chat_template_kwargs"] = {"enable_thinking": False}
-    thread = Thread(target=model.generate, kwargs=generation_kwargs)
+    streamer = TextIteratorStreamer(
+        tokenizer, skip_prompt=True, skip_special_tokens=True, timeout=300.0
+    )
+
+    def _generate():
+        try:
+            model.generate(**model_inputs, max_new_tokens=max_new_tokens, streamer=streamer)
+        except Exception:
+            streamer.end()
+            raise
+
+    thread = Thread(target=_generate)
     thread.start()
     for piece in streamer:
         if not enable_thinking and "</think>" in piece:
             continue
         yield piece
+    thread.join()
 
 
 def generate_answer(question, retrieved_chunks, history=None):
