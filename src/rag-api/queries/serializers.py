@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from documents.models import Conversation, Document, Query
+from documents.models import Chunk, Conversation, Document, Query
 from documents.serializers import ChunkSerializer
 
 
@@ -20,11 +20,13 @@ class QuerySourceSerializer(ChunkSerializer):
     """A source chunk with a reference to its parent document."""
 
     document = SourceDocumentSerializer(read_only=True)
+    distance = serializers.FloatField(read_only=True, required=False)
 
     class Meta(ChunkSerializer.Meta):
         """Model and fields exposed for a source."""
 
-        fields = ChunkSerializer.Meta.fields + ["document"]
+        model = Chunk
+        fields = ChunkSerializer.Meta.fields + ["document", "distance"]
 
 
 class QuerySerializer(serializers.ModelSerializer):

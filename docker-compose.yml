@@ -45,6 +45,12 @@ services:
       UPLOAD_DIR: /data/uploads
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,api,nginx}
       CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      MODEL_NAME: ${MODEL_NAME:-Qwen/Qwen3-0.6B}
+      MAX_NEW_TOKENS: ${MAX_NEW_TOKENS:-512}
+      ENABLE_THINKING: ${ENABLE_THINKING:-false}
+      HISTORY_TURNS: ${HISTORY_TURNS:-6}
+      TOP_K: ${TOP_K:-3}
+      MAX_DISTANCE: ${MAX_DISTANCE:-}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       MEDIA_DIR: /data/media

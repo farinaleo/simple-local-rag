@@ -109,7 +109,7 @@ def test_query_without_conversation_creates_one_titled_from_question(monkeypatch
     alice, alice_client = _auth("alice")
     monkeypatch.setattr("queries.views.retrieve_chunks", lambda question, **kw: [])
     monkeypatch.setattr(
-        "queries.views.generate_answer", lambda question, texts, history=None: ("", "Answer.")
+        "queries.views.stream_answer", lambda question, texts, history=None: iter(["Answer."])
     )
 
     response = alice_client.post("/api/query/", {"question": "What is the tower?"}, format="json")
@@ -129,7 +129,7 @@ def test_query_with_conversation_appends_to_it(monkeypatch):
     conversation = _make_conversation(owner=alice, title="Existing")
     monkeypatch.setattr("queries.views.retrieve_chunks", lambda question, **kw: [])
     monkeypatch.setattr(
-        "queries.views.generate_answer", lambda question, texts, history=None: ("", "Answer.")
+        "queries.views.stream_answer", lambda question, texts, history=None: iter(["Answer."])
     )
 
     response = alice_client.post(
@@ -153,11 +153,11 @@ def test_query_passes_conversation_history_to_generator(monkeypatch):
     monkeypatch.setattr("queries.views.retrieve_chunks", lambda question, **kw: [])
     seen = {}
 
-    def fake_generate_answer(question, texts, history=None):
+    def fake_stream_answer(question, texts, history=None):
         seen["history"] = history
-        return "", "Answer."
+        return iter(["Answer."])
 
-    monkeypatch.setattr("queries.views.generate_answer", fake_generate_answer)
+    monkeypatch.setattr("queries.views.stream_answer", fake_stream_answer)
 
     response = alice_client.post(
         "/api/query/",

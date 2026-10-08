@@ -1,6 +1,11 @@
 # Changelog
 
 ## [Unreleased]
+
+## Added
+- ✨(backend) stream answers token by token with a real model streamer #68
+- ✨(backend) add max-distance ceiling and distance scores to chunk retrieval #68
+- 🔧(config) expose rag tuning env vars in compose and env example #68
 ## Fixed
 - 🐛(docker) raise nginx body limit for avatar uploads (413 fix) #61
 - ✨(frontend) add clear french error messages for api failures #61

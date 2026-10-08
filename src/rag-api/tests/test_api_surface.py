@@ -128,8 +128,8 @@ def test_bearer_flow_upload_then_query(monkeypatch):
     assert upload.status_code == 202
 
     monkeypatch.setattr(
-        "queries.views.generate_answer",
-        lambda question, texts, history=None: ("", "The tower is tall and made of iron."),
+        "queries.views.stream_answer",
+        lambda question, texts, history=None: iter(["The tower is tall and made of iron."]),
     )
     query = token_client.post(
         "/api/query/",

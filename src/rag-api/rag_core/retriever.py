@@ -17,10 +17,17 @@ def retrieve_chunks(question, top_k=None, user=None):
             their own documents plus shared ones.
 
     Returns:
-        The list of matching chunks, closest first.
+        The list of matching chunks, closest first; chunks farther
+        than the ``MAX_DISTANCE`` threshold (when set) are dropped.
     """
     if top_k is None:
         top_k = int(os.environ.get("TOP_K", "3"))
+    max_distance = os.environ.get("MAX_DISTANCE")
     model = embedding_module.get_embedding_model()
     query_embedding = model.encode(question, normalize_embeddings=True)
-    return search_similar_chunks(list(query_embedding), top_k=top_k, user=user)
+    return search_similar_chunks(
+        list(query_embedding),
+        top_k=top_k,
+        user=user,
+        max_distance=float(max_distance) if max_distance else None,
+    )

@@ -51,8 +51,8 @@ def test_query_streams_tokens_then_sources(indexed_document, monkeypatch):
         ],
     )
     monkeypatch.setattr(
-        "queries.views.generate_answer",
-        lambda question, texts, history=None: ("", "The tower is tall and made of iron."),
+        "queries.views.stream_answer",
+        lambda question, texts, history=None: iter(["The tower is tall and made of iron."]),
     )
 
     response = client.post("/api/query/", {"question": "How tall?"}, format="json")
@@ -83,8 +83,8 @@ def test_query_persists_answer_with_sources(indexed_document, monkeypatch):
         ],
     )
     monkeypatch.setattr(
-        "queries.views.generate_answer",
-        lambda question, texts, history=None: ("", "Short grounded answer."),
+        "queries.views.stream_answer",
+        lambda question, texts, history=None: iter(["Short grounded answer."]),
     )
 
     response = client.post("/api/query/", {"question": "How tall?"}, format="json")
@@ -99,11 +99,11 @@ def test_query_persists_answer_with_sources(indexed_document, monkeypatch):
 def test_failed_generation_records_query_and_streams_error(monkeypatch):
     """A failed generation emits an error event and records the failure."""
 
-    def _boom(question, texts):
+    def _boom(question, texts, history=None):
         raise RuntimeError("model exploded")
 
     monkeypatch.setattr("queries.views.retrieve_chunks", lambda question, **kw: [])
-    monkeypatch.setattr("queries.views.generate_answer", _boom)
+    monkeypatch.setattr("queries.views.stream_answer", _boom)
 
     response = client.post("/api/query/", {"question": "Anything?"}, format="json")
 
@@ -155,8 +155,8 @@ def test_query_uses_real_retriever_contract(indexed_document, monkeypatch):
         lambda: FakeEmbeddingModel(),
     )
     monkeypatch.setattr(
-        "queries.views.generate_answer",
-        lambda question, texts, history=None: ("", "Grounded answer."),
+        "queries.views.stream_answer",
+        lambda question, texts, history=None: iter(["Grounded answer."]),
     )
 
     response = client.post("/api/query/", {"question": "How tall?"}, format="json")

@@ -126,6 +126,46 @@ def parse_output(output_ids):
     return thinking, content
 
 
+def stream_answer(question, retrieved_chunks, history=None):
+    """Stream the answer of a grounded question token by token.
+
+    Args:
+        question: The user question.
+        retrieved_chunks: The chunk texts providing the context.
+        history: The previous exchanges of the conversation, oldest
+            first, each as a ``(question, answer)`` pair.
+
+    Yields:
+        The answer pieces as they are produced by the model; thinking
+        content (Qwen3 ``<think>`` blocks) is skipped when thinking is
+        disabled and streamed after it when enabled.
+    """
+    from threading import Thread
+
+    from transformers import TextIteratorStreamer
+
+    tokenizer, model = _load_generation_model()
+    messages = build_messages(question, retrieved_chunks, history=history)
+    model_inputs = produce_model_input(messages)
+    max_new_tokens = int(os.environ.get("MAX_NEW_TOKENS", "512"))
+    enable_thinking = os.environ.get("ENABLE_THINKING", "false").lower() == "true"
+
+    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
+    generation_kwargs = {
+        **model_inputs,
+        "max_new_tokens": max_new_tokens,
+        "streamer": streamer,
+    }
+    if not enable_thinking:
+        generation_kwargs["chat_template_kwargs"] = {"enable_thinking": False}
+    thread = Thread(target=model.generate, kwargs=generation_kwargs)
+    thread.start()
+    for piece in streamer:
+        if not enable_thinking and "</think>" in piece:
+            continue
+        yield piece
+
+
 def generate_answer(question, retrieved_chunks, history=None):
     """Answer a question from retrieved chunks, POC-equivalent.
 

@@ -46,6 +46,17 @@ def test_retrieve_chunks_returns_closest_first(document, monkeypatch):
     assert "Eiffel Tower" in chunk.content
 
 
+def test_retrieve_chunks_honors_max_distance(document, monkeypatch):
+    """A MAX_DISTANCE env ceiling drops chunks that are too far."""
+    monkeypatch.setattr("ingestion.embedding.get_embedding_model", lambda: FakeEmbeddingModel())
+    monkeypatch.setenv("MAX_DISTANCE", "0.0001")
+    index_document(document)
+
+    results = retrieve_chunks("Where is the Eiffel Tower?")
+
+    assert results == []
+
+
 def test_build_messages_grounded_prompt():
     """The prompt embeds the numbered context and the question."""
     messages = build_messages("What color?", ["The sky is blue.", "Grass is green."])

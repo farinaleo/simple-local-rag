@@ -222,6 +222,8 @@ make down          # stop everything, keep the volumes
 | `MODEL_NAME` | `Qwen/Qwen3-0.6B` | Generation model |
 | `EMBED_NAME` | `Qwen/Qwen3-Embedding-0.6B` | Embedding model |
 | `TOP_K` | `3` | Chunks retrieved per query |
+| `MAX_DISTANCE` | *(unset)* | Cosine distance ceiling: farther chunks are dropped |
+| `HISTORY_TURNS` | `6` | Past exchanges sent as conversation context |
 | `CHUNK_SIZE` | `500` | Max characters per chunk |
 | `MAX_NEW_TOKENS` | `512` | Generation budget |
 | `ENABLE_THINKING` | `false` | Qwen3 thinking mode |
