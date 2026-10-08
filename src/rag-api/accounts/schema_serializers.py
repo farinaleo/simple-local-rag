@@ -93,6 +93,8 @@ _token_update_request = inline_serializer(
 _admin_user_fields = {
     "id": serializers.IntegerField(),
     "username": serializers.CharField(),
+    "display_name": serializers.CharField(),
+    "avatar_url": serializers.CharField(allow_null=True),
     "role": serializers.ChoiceField(choices=["user", "admin"]),
     "is_active": serializers.BooleanField(),
     "must_change_password": serializers.BooleanField(),

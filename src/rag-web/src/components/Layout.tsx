@@ -1,24 +1,20 @@
 import { motion } from 'framer-motion'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
-import { useLogout, useSession } from '@/hooks/auth'
+import { useLogout, useProfile, useSession } from '@/hooks/auth'
 import { useDocuments } from '@/hooks/documents'
 
 const navItems = [
   { to: '/documents', label: 'Documents', icon: '📄' },
   { to: '/chat', label: 'Chats', icon: '💬' },
 ]
-const accountNavItems = [{ to: '/account', label: 'Mon compte', icon: '👤' }]
 const adminNavItems = [{ to: '/admin', label: 'Administration', icon: '🛡️' }]
 
 export default function Layout() {
   const { data: documents } = useDocuments()
   const { data: session } = useSession()
-  const items = [
-    ...navItems,
-    ...accountNavItems,
-    ...(session?.role === 'admin' ? adminNavItems : []),
-  ]
+  const { data: profile } = useProfile(!!session)
+  const items = [...navItems, ...(session?.role === 'admin' ? adminNavItems : [])]
   const logout = useLogout()
   const navigate = useNavigate()
   const indexedCount = (documents ?? []).filter((d) => d.status === 'indexed').length
@@ -64,16 +60,32 @@ export default function Layout() {
 
           <div className="mt-auto space-y-2">
             {session && (
-              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xs font-bold uppercase text-white">
-                  {session.username.slice(0, 2)}
-                </div>
-                <p className="min-w-0 flex-1 truncate text-xs font-medium text-zinc-200">
-                  {session.username}
-                </p>
+              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-2.5">
                 <button
                   type="button"
-                  className="text-xs text-zinc-400 transition-colors hover:text-red-400"
+                  className="flex min-w-0 flex-1 items-center gap-2 rounded-xl px-1 py-1 text-left transition-colors hover:bg-white/5"
+                  title="Mon profil"
+                  onClick={() => navigate('/account')}
+                >
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="avatar"
+                      className="h-8 w-8 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xs font-bold uppercase text-white">
+                      {(profile?.username ?? session.username).slice(0, 2)}
+                    </div>
+                  )}
+                  <span className="min-w-0 flex-1 truncate text-xs font-medium text-zinc-200">
+                    {profile?.display_name ?? session.username}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-lg px-1.5 py-1 text-xs text-zinc-400 transition-colors hover:text-red-400"
+                  title="Quitter"
                   onClick={() =>
                     logout.mutate(undefined, {
                       onSuccess: () => navigate('/login'),

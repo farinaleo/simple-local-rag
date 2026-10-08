@@ -188,59 +188,72 @@ function AccountPage() {
             Changer la photo
           </Button>
         </div>
-        <div className="mt-4 flex gap-2">
-          <Input
-            className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-            placeholder="Nom affiché"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-          />
-          <Button
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
-            onClick={saveDisplayName}
-          >
-            Enregistrer
-          </Button>
-        </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.12 }}
-        className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
-      >
-        <h3 className="font-semibold text-zinc-100">Changer mon mot de passe</h3>
-        <div className="mt-3 space-y-2">
-          <Input
-            type="password"
-            className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-            placeholder="Mot de passe actuel"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-          />
-          <Input
-            type="password"
-            className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-            placeholder="Nouveau mot de passe (min. 8 caractères)"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && submitPassword()}
-          />
-        </div>
-        <Button
-          className="mt-3 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
-          onClick={submitPassword}
-          disabled={changePassword.isPending}
+      <div className="grid gap-6 md:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.12 }}
+          className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
         >
-          Mettre à jour
-        </Button>
-      </motion.div>
+          <h3 className="font-semibold text-zinc-100">Édition du profil</h3>
+          <div className="mt-3 flex gap-2">
+            <Input
+              className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+              placeholder="Nom affiché"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && saveDisplayName()}
+            />
+            <Button
+              className="shrink-0 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
+              onClick={saveDisplayName}
+              disabled={updateProfile.isPending}
+            >
+              Enregistrer
+            </Button>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.16 }}
+          className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
+        >
+          <h3 className="font-semibold text-zinc-100">Changer mon mot de passe</h3>
+          <div className="mt-3 space-y-2">
+            <Input
+              type="password"
+              className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+              placeholder="Mot de passe actuel"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+            />
+            <Input
+              type="password"
+              className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+              placeholder="Nouveau mot de passe (min. 8)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submitPassword()}
+            />
+            <Button
+              className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
+              onClick={submitPassword}
+              disabled={changePassword.isPending}
+            >
+              Mettre à jour
+            </Button>
+          </div>
+        </motion.div>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.16 }}
+        transition={{ duration: 0.35, delay: 0.2 }}
         className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
       >
         <h3 className="font-semibold text-zinc-100">Tokens API</h3>
@@ -256,7 +269,7 @@ function AccountPage() {
             onKeyDown={(e) => e.key === 'Enter' && submitToken()}
           />
           <Button
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
+            className="shrink-0 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
             onClick={submitToken}
           >
             + Créer
