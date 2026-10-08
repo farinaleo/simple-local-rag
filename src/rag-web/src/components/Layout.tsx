@@ -10,6 +10,27 @@ const navItems = [
 ]
 const adminNavItems = [{ to: '/admin', label: 'Administration', icon: '🛡️' }]
 
+function Avatar({
+  url,
+  name,
+  size = 'h-8 w-8',
+}: {
+  url: string | null
+  name: string
+  size?: string
+}) {
+  if (url) {
+    return <img src={url} alt="avatar" className={`${size} shrink-0 rounded-full object-cover`} />
+  }
+  return (
+    <div
+      className={`${size} flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xs font-bold uppercase text-white`}
+    >
+      {name.slice(0, 2)}
+    </div>
+  )
+}
+
 export default function Layout() {
   const { data: documents } = useDocuments()
   const { data: session } = useSession()
@@ -28,63 +49,54 @@ export default function Layout() {
       </div>
 
       <div className="relative flex flex-col lg:flex-row">
-        <aside className="sticky top-0 z-20 flex shrink-0 flex-col gap-3 border-b border-white/10 bg-zinc-900/60 p-4 backdrop-blur lg:h-screen lg:w-60 lg:flex-col lg:border-b-0 lg:border-r lg:bg-zinc-900/40 lg:p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-lg shadow-lg shadow-violet-600/30">
+        <aside className="sticky top-0 z-20 flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-zinc-900/60 p-3 backdrop-blur lg:h-screen lg:w-60 lg:flex-col lg:items-stretch lg:justify-start lg:border-b-0 lg:border-r lg:bg-zinc-900/40 lg:p-5">
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-lg shadow-lg shadow-violet-600/30">
               📚
             </div>
-            <div>
+            <div className="hidden lg:block">
               <p className="font-bold tracking-tight">Mon RAG</p>
-              <p className="hidden text-[11px] text-zinc-500 lg:block">Workspace</p>
+              <p className="text-[11px] text-zinc-500">Workspace</p>
             </div>
           </div>
 
-          <nav className="flex gap-1.5 overflow-x-auto lg:mt-8 lg:flex-col lg:space-y-1.5 lg:overflow-visible">
+          <nav className="flex items-center gap-1 lg:mt-8 lg:flex-col lg:space-y-1.5">
             {items.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
+                title={item.label}
                 className={({ isActive }) =>
-                  `flex shrink-0 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all lg:w-full ${
+                  `flex shrink-0 items-center justify-center gap-3 rounded-xl px-3 py-2 text-base transition-all lg:w-full lg:justify-start lg:px-3.5 lg:py-2.5 lg:text-sm lg:font-medium ${
                     isActive
                       ? 'bg-gradient-to-r from-violet-600/25 to-fuchsia-600/25 text-white shadow-inner ring-1 ring-violet-500/30'
                       : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
                   }`
                 }
               >
-                <span className="text-base">{item.icon}</span>
-                {item.label}
+                <span>{item.icon}</span>
+                <span className="hidden lg:inline">{item.label}</span>
               </NavLink>
             ))}
           </nav>
 
-          <div className="mt-auto hidden space-y-2 lg:block">
+          <div className="flex shrink-0 items-center gap-1 lg:mt-auto lg:block lg:space-y-2">
             {session && (
-              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-2.5">
+              <>
                 <button
                   type="button"
-                  className="flex min-w-0 flex-1 items-center gap-2 rounded-xl px-1 py-1 text-left transition-colors hover:bg-white/5"
-                  title="Mon profil"
+                  className="flex items-center rounded-full transition-transform hover:scale-105 lg:min-w-0 lg:flex-1"
+                  title={profile?.display_name ?? session.username}
                   onClick={() => navigate('/account')}
                 >
-                  {profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt="avatar"
-                      className="h-8 w-8 shrink-0 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xs font-bold uppercase text-white">
-                      {(profile?.username ?? session.username).slice(0, 2)}
-                    </div>
-                  )}
-                  <span className="min-w-0 flex-1 truncate text-xs font-medium text-zinc-200">
-                    {profile?.display_name ?? session.username}
-                  </span>
+                  <Avatar
+                    url={profile?.avatar_url ?? null}
+                    name={profile?.username ?? session.username}
+                  />
                 </button>
                 <button
                   type="button"
-                  className="shrink-0 rounded-lg px-1.5 py-1 text-xs text-zinc-400 transition-colors hover:text-red-400"
+                  className="rounded-lg px-2 py-1 text-xs text-zinc-400 transition-colors hover:text-red-400 lg:hidden"
                   title="Quitter"
                   onClick={() =>
                     logout.mutate(undefined, {
@@ -92,11 +104,39 @@ export default function Layout() {
                     })
                   }
                 >
-                  Quitter
+                  ⎋
                 </button>
-              </div>
+                <div className="mt-2 hidden items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-2.5 lg:flex">
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-center gap-2 rounded-xl px-1 py-1 text-left transition-colors hover:bg-white/5"
+                    title="Mon profil"
+                    onClick={() => navigate('/account')}
+                  >
+                    <Avatar
+                      url={profile?.avatar_url ?? null}
+                      name={profile?.username ?? session.username}
+                    />
+                    <span className="min-w-0 flex-1 truncate text-xs font-medium text-zinc-200">
+                      {profile?.display_name ?? session.username}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-lg px-1.5 py-1 text-xs text-zinc-400 transition-colors hover:text-red-400"
+                    title="Quitter"
+                    onClick={() =>
+                      logout.mutate(undefined, {
+                        onSuccess: () => navigate('/login'),
+                      })
+                    }
+                  >
+                    Quitter
+                  </button>
+                </div>
+              </>
             )}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
+            <div className="hidden rounded-2xl border border-white/10 bg-white/5 p-3.5 lg:mt-2 lg:block">
               <p className="text-[11px] leading-relaxed text-zinc-400">
                 <span className="font-semibold text-zinc-200">
                   {indexedCount} fichier{indexedCount > 1 ? 's' : ''}
