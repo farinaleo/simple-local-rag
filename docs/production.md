@@ -13,7 +13,7 @@ Copy `.env.example` to `.env` at the repository root, then set:
 | `DEBUG` | `false` | Disables Django debug pages and dev media serving |
 | `SECRET_KEY` | long random string | Signs sessions and tokens; never keep the dev key |
 | `ALLOWED_HOSTS` | your host(s), comma-separated | Django rejects requests with other `Host` headers |
-| `CSRF_TRUSTED_ORIGINS` | your origin(s), e.g. `https://rag.example.com` | Login and admin forms are rejected otherwise |
+| `CSRF_TRUSTED_ORIGINS` | your origin(s), e.g. `https://rag.example.com` or `http://192.168.1.146:8080` for LAN access | Login and admin forms are rejected otherwise |
 | `CORS_ALLOWED_ORIGINS` | your web origin(s) | Browser API calls from other origins fail otherwise |
 | `POSTGRES_PASSWORD` | strong password | Used by compose for the `postgres` service |
 | `ADMIN_PASSWORD` | strong password, then change it | Bootstrap admin account created by migration |
