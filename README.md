@@ -342,6 +342,10 @@ are replaced by deterministic doubles so the suite runs fast and offline.
 
 ## 📝 Notes
 
+- Going to production? Follow the validated
+  [`DEBUG=false` checklist](docs/production.md): required env vars, media
+  serving via nginx, and the post-deploy validation steps.
+
 - `ENABLE_THINKING=false` + `MAX_NEW_TOKENS=512` = fast grounded QA; flip
   both for reasoning-heavy use cases.
 - GPU inference needs no code change: start with `compose.gpu.yml` (see
