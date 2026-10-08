@@ -46,14 +46,6 @@ async function postAuth(endpoint: string, payload: Record<string, string>): Prom
   return response.json()
 }
 
-export function useRegister() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (payload: { username: string; password: string }) => postAuth('register', payload),
-    onSuccess: (user) => queryClient.setQueryData(sessionKey, user),
-  })
-}
-
 export function useLogin() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -95,6 +87,8 @@ async function adminFetch(path: string, init?: RequestInit) {
 export interface AdminUser {
   id: number
   username: string
+  display_name: string
+  avatar_url: string | null
   role: string
   is_active: boolean
   must_change_password: boolean

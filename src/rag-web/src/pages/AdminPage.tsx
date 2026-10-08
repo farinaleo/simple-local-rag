@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import type { AdminTokenData, AdminUser } from '@/hooks/auth'
 import {
   useAdminTokens,
   useAdminUsers,
@@ -10,25 +11,74 @@ import {
   useCreateAdminUser,
   useDeleteAdminToken,
   useDeleteAdminUser,
+  useSession,
   useUpdateAdminToken,
   useUpdateAdminUser,
 } from '@/hooks/auth'
-import { useSession } from '@/hooks/auth'
+
+function UserAvatar({ user, size = 'md' }: { user: AdminUser; size?: 'md' | 'lg' }) {
+  const dimension = size === 'lg' ? 'h-11 w-11' : 'h-9 w-9'
+  if (user.avatar_url) {
+    return <img src={user.avatar_url} alt="" className={`${dimension} rounded-full object-cover`} />
+  }
+  return (
+    <div
+      className={`${dimension} flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xs font-bold uppercase text-white`}
+    >
+      {user.username.slice(0, 2)}
+    </div>
+  )
+}
+
+function sortTokens(tokens: AdminTokenData[], sort: string) {
+  const statusOrder: Record<string, number> = { active: 0, paused: 1, expired: 2 }
+  return [...tokens].sort((a, b) => {
+    if (sort === 'status') return (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3)
+    if (sort === 'user') return a.user.localeCompare(b.user)
+    return 0
+  })
+}
 
 function AdminPage() {
   const { data: session } = useSession()
-  const { data: users, isLoading } = useAdminUsers(session?.role === 'admin')
+  const isAdmin = session?.role === 'admin'
+  const { data: users, isLoading } = useAdminUsers(isAdmin)
+  const { data: tokens, isLoading: tokensLoading } = useAdminTokens(isAdmin)
   const createUser = useCreateAdminUser()
   const updateUser = useUpdateAdminUser()
   const deleteUser = useDeleteAdminUser()
   const changePassword = useChangePassword()
-  const isAdmin = session?.role === 'admin'
-  const { data: tokens, isLoading: tokensLoading } = useAdminTokens(isAdmin)
   const updateToken = useUpdateAdminToken()
   const deleteToken = useDeleteAdminToken()
   const [newUsername, setNewUsername] = useState('')
+  const [userSearch, setUserSearch] = useState('')
   const [showOwnPassword, setShowOwnPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
+  const [tokenSearch, setTokenSearch] = useState('')
+  const [tokenSort, setTokenSort] = useState('status')
+
+  const filteredUsers = useMemo(() => {
+    const query = userSearch.trim().toLowerCase()
+    const list = users ?? []
+    if (!query) return list
+    return list.filter(
+      (user) =>
+        user.username.toLowerCase().includes(query) ||
+        user.display_name.toLowerCase().includes(query),
+    )
+  }, [users, userSearch])
+
+  const filteredTokens = useMemo(() => {
+    const query = tokenSearch.trim().toLowerCase()
+    const list = tokens ?? []
+    const matched = query
+      ? list.filter(
+          (token) =>
+            token.name.toLowerCase().includes(query) || token.user.toLowerCase().includes(query),
+        )
+      : list
+    return sortTokens(matched, tokenSort)
+  }, [tokens, tokenSearch, tokenSort])
 
   const submitNewUser = async () => {
     const username = newUsername.trim()
@@ -97,7 +147,7 @@ function AdminPage() {
             <Input
               type="password"
               className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-              placeholder="Nouveau mot de passe (min. 8 caractères)"
+              placeholder="Nouveau mot de passe (min. 8)"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
@@ -117,10 +167,10 @@ function AdminPage() {
         transition={{ duration: 0.35, delay: 0.08 }}
         className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
       >
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-            placeholder="Nom du nouveau compte utilisateur"
+            placeholder="Nom du compte à créer"
             value={newUsername}
             onChange={(e) => setNewUsername(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submitNewUser()}
@@ -139,9 +189,26 @@ function AdminPage() {
         </p>
       </motion.div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          type="search"
+          autoComplete="off"
+          spellCheck={false}
+          className="w-full max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+          placeholder="Rechercher un compte…"
+          value={userSearch}
+          onChange={(e) => setUserSearch(e.target.value)}
+        />
+        {userSearch && (
+          <span className="text-xs text-zinc-500">
+            {filteredUsers.length} résultat{filteredUsers.length > 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
       <div className="space-y-2">
         {isLoading && <p className="text-sm text-zinc-500">Chargement…</p>}
-        {users?.map((user, i) => (
+        {filteredUsers.map((user, i) => (
           <motion.div
             key={user.id}
             initial={{ opacity: 0, y: -8 }}
@@ -149,10 +216,11 @@ function AdminPage() {
             transition={{ duration: 0.25, delay: i * 0.03 }}
             className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur transition-all hover:border-violet-500/40"
           >
+            <UserAvatar user={user} />
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-zinc-100">{user.username}</p>
+              <p className="truncate font-medium text-zinc-100">{user.display_name}</p>
               <p className="mt-0.5 text-xs text-zinc-400">
-                {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
+                @{user.username} · {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
                 {!user.is_active && ' · bloqué'}
                 {user.must_change_password && ' · mot de passe temporaire'}
               </p>
@@ -214,15 +282,33 @@ function AdminPage() {
         <h3 className="px-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Tokens API de tous les utilisateurs
         </h3>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Input
+            type="search"
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+            placeholder="Rechercher par token ou utilisateur…"
+            value={tokenSearch}
+            onChange={(e) => setTokenSearch(e.target.value)}
+          />
+          <Button
+            variant="outline"
+            className="rounded-xl"
+            onClick={() => setTokenSort((sort) => (sort === 'status' ? 'user' : 'status'))}
+          >
+            Tri : {tokenSort === 'status' ? 'statut' : 'créateur'}
+          </Button>
+        </div>
       </motion.div>
       <div className="mt-2 space-y-2">
         {tokensLoading && <p className="text-sm text-zinc-500">Chargement…</p>}
-        {tokens?.length === 0 && (
+        {!tokensLoading && filteredTokens.length === 0 && (
           <p className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-zinc-500">
-            Aucun token API actif.
+            Aucun token API ne correspond.
           </p>
         )}
-        {tokens?.map((token) => (
+        {filteredTokens.map((token) => (
           <motion.div
             key={token.id}
             initial={{ opacity: 0, y: -8 }}

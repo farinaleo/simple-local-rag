@@ -44,9 +44,14 @@ def _generate_temp_password(length=12):
 def _user_payload(user):
     """Build the admin listing payload for a user."""
     profile, _ = Profile.objects.get_or_create(user=user)
+    avatar_url = None
+    if profile.avatar:
+        avatar_url = profile.avatar.url
     return {
         "id": user.pk,
         "username": user.username,
+        "display_name": profile.display_name or user.username,
+        "avatar_url": avatar_url,
         "role": profile.role,
         "is_active": user.is_active,
         "must_change_password": profile.must_change_password,

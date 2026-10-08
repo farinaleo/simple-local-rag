@@ -56,7 +56,7 @@ export default function ChangePasswordPage() {
           <Input
             type="password"
             className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-            placeholder="Nouveau mot de passe (min. 8 caractères)"
+            placeholder="Nouveau mot de passe (min. 8)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submit()}

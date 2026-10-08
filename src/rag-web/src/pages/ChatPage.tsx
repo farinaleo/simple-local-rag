@@ -221,7 +221,7 @@ export default function ChatPage() {
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35 }}
-            className="flex flex-col space-y-3 lg:h-[560px]"
+            className="flex flex-col space-y-3 lg:h-[calc(100vh-170px)]"
           >
             <Button
               className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg shadow-violet-600/25 transition-transform hover:scale-[1.02] hover:from-violet-500 hover:to-fuchsia-500"
@@ -258,7 +258,7 @@ export default function ChatPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.08 }}
-            className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur lg:h-[560px]"
+            className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur lg:h-[calc(100vh-170px)]"
           >
             <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-sm shadow-lg shadow-violet-600/25">
