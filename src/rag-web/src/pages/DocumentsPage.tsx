@@ -167,10 +167,10 @@ export default function DocumentsPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, x: 24, scale: 0.96 }}
                   transition={{ duration: 0.25, delay: i * 0.03 }}
-                  className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur transition-all hover:border-violet-500/40 hover:bg-white/[0.08]"
+                  className="group flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4 backdrop-blur transition-all hover:border-violet-500/40 hover:bg-white/[0.08]"
                 >
                   <FileIcon mimeType={document.mime_type} name={document.original_filename} />
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 basis-40">
                     <p className="truncate font-medium text-zinc-100">
                       {document.original_filename}
                     </p>
@@ -191,7 +191,7 @@ export default function DocumentsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-lg text-zinc-400 opacity-0 transition-all hover:bg-red-500/15 hover:text-red-400 group-hover:opacity-100"
+                    className="rounded-lg text-zinc-400 transition-all hover:bg-red-500/15 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
                     onClick={() => setPendingDelete(document)}
                   >
                     Supprimer

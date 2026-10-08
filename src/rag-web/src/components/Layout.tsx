@@ -27,25 +27,25 @@ export default function Layout() {
         <div className="absolute -bottom-40 right-1/4 h-96 w-96 rounded-full bg-fuchsia-600/15 blur-[128px]" />
       </div>
 
-      <div className="relative flex">
-        <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-white/10 bg-zinc-900/40 p-5 backdrop-blur">
+      <div className="relative flex flex-col lg:flex-row">
+        <aside className="sticky top-0 z-20 flex shrink-0 flex-col gap-3 border-b border-white/10 bg-zinc-900/60 p-4 backdrop-blur lg:h-screen lg:w-60 lg:flex-col lg:border-b-0 lg:border-r lg:bg-zinc-900/40 lg:p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-lg shadow-lg shadow-violet-600/30">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-lg shadow-lg shadow-violet-600/30">
               📚
             </div>
             <div>
               <p className="font-bold tracking-tight">Mon RAG</p>
-              <p className="text-[11px] text-zinc-500">Workspace</p>
+              <p className="hidden text-[11px] text-zinc-500 lg:block">Workspace</p>
             </div>
           </div>
 
-          <nav className="mt-8 space-y-1.5">
+          <nav className="flex gap-1.5 overflow-x-auto lg:mt-8 lg:flex-col lg:space-y-1.5 lg:overflow-visible">
             {items.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all ${
+                  `flex shrink-0 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all lg:w-full ${
                     isActive
                       ? 'bg-gradient-to-r from-violet-600/25 to-fuchsia-600/25 text-white shadow-inner ring-1 ring-violet-500/30'
                       : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
@@ -58,7 +58,7 @@ export default function Layout() {
             ))}
           </nav>
 
-          <div className="mt-auto space-y-2">
+          <div className="mt-auto hidden space-y-2 lg:block">
             {session && (
               <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-2.5">
                 <button
@@ -108,7 +108,7 @@ export default function Layout() {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 p-6">
+        <main className="min-w-0 flex-1 p-4 sm:p-6">
           <Outlet />
         </main>
       </div>
@@ -143,10 +143,10 @@ export function PageHeader({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="flex items-end justify-between"
+      className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
     >
-      <div>
-        <h1 className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+      <div className="min-w-0">
+        <h1 className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-3xl">
           {title}
         </h1>
         <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>

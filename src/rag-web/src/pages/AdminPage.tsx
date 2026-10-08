@@ -147,7 +147,7 @@ function AdminPage() {
             <Input
               type="password"
               className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-              placeholder="Nouveau mot de passe (min. 8 caractères)"
+              placeholder="Nouveau mot de passe (min. 8)"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
@@ -167,10 +167,10 @@ function AdminPage() {
         transition={{ duration: 0.35, delay: 0.08 }}
         className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
       >
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-            placeholder="Nom du nouveau compte utilisateur"
+            placeholder="Nom du compte à créer"
             value={newUsername}
             onChange={(e) => setNewUsername(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submitNewUser()}
@@ -189,12 +189,12 @@ function AdminPage() {
         </p>
       </motion.div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           type="search"
           autoComplete="off"
           spellCheck={false}
-          className="max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+          className="w-full max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
           placeholder="Rechercher un compte…"
           value={userSearch}
           onChange={(e) => setUserSearch(e.target.value)}
@@ -287,7 +287,7 @@ function AdminPage() {
             type="search"
             autoComplete="off"
             spellCheck={false}
-            className="max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+            className="w-full max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
             placeholder="Rechercher par token ou utilisateur…"
             value={tokenSearch}
             onChange={(e) => setTokenSearch(e.target.value)}
