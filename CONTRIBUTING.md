@@ -1,12 +1,12 @@
+_This guide is inspired by the contributing guidelines from la [suite](https://github.com/suitenumerique)_
 # Contributing to the Project
 
 Thank you for taking the time to contribute! Please follow these guidelines to ensure a smooth and productive workflow. 🚀🚀🚀
 
-To get started with the project, please refer to the [README.md](https://github.com/suitenumerique/messages/blob/main/README.md) for detailed instructions on how to run Messages locally.
+To get started with the project, please refer to the [README.md](https://github.com/farinaleo/simple-local-rag/blob/correct-contributing/README.md) for detailed instructions on how to run simple-local-rag locally.
 
 Contributors are required to sign off their commits with `git commit --signoff`: this confirms that they have read and accepted the [Developer's Certificate of Origin 1.1](https://developercertificate.org/). For security reasons we also require [signing your commits with your SSH or GPG key](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-signature-verification) with `git commit -S`.
 
-Please also check out our [dev handbook](https://suitenumerique.gitbook.io/handbook) to learn our best practices.
 
 ## AI Agents Policy
 
@@ -102,9 +102,3 @@ Make sure that all new features or fixes have corresponding tests. Run the test 
 If you need any help while contributing, feel free to open a discussion or ask for guidance in the issue tracker. We are more than happy to assist!
 
 Thank you for your contributions! 👍
-
-## Contribute to BlockNote
-We use [BlockNote](https://www.blocknotejs.org/) for the text editing features of Messages. 
-If you find and issue with the editor you can [report it](https://github.com/TypeCellOS/BlockNote/issues) directly on their repository.
-
-Please consider contributing to BlockNotejs, as a library, it's useful to many projects not just Messages.
