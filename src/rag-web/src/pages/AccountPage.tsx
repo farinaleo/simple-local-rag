@@ -150,17 +150,6 @@ function AccountPage() {
         className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
       >
         <div className="flex items-center gap-4">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt="avatar"
-              className="h-16 w-16 rounded-2xl object-cover"
-            />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xl font-bold uppercase text-white">
-              {(profile?.username ?? '?').slice(0, 2)}
-            </div>
-          )}
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-zinc-100">
               {profile?.display_name ?? session?.username}
@@ -169,24 +158,6 @@ function AccountPage() {
               @{profile?.username} · {profile?.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
             </p>
           </div>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/png,image/jpeg"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) uploadAvatar(file)
-            }}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-xl"
-            onClick={() => fileInput.current?.click()}
-          >
-            Changer la photo
-          </Button>
         </div>
       </motion.div>
 
@@ -198,6 +169,38 @@ function AccountPage() {
           className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
         >
           <h3 className="font-semibold text-zinc-100">Édition du profil</h3>
+          <div className="mt-3 flex items-center gap-3">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="avatar"
+                className="h-12 w-12 shrink-0 rounded-2xl object-cover"
+              />
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-sm font-bold uppercase text-white">
+                {(profile?.username ?? '?').slice(0, 2)}
+              </div>
+            )}
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/png,image/jpeg"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) uploadAvatar(file)
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              onClick={() => fileInput.current?.click()}
+              disabled={updateProfile.isPending}
+            >
+              Changer la photo
+            </Button>
+          </div>
           <div className="mt-3 flex gap-2">
             <Input
               className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
