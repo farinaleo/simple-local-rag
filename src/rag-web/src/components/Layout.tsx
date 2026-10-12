@@ -121,7 +121,7 @@ export default function Layout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex max-w-[1120px]">
+      <div className="flex">
         {/* Desktop sidebar */}
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r bg-sidebar lg:block">
           <SidebarContent />
@@ -145,7 +145,7 @@ export default function Layout() {
           </main>
         </div>
         {/* Desktop main */}
-        <main className="hidden min-w-0 flex-1 px-6 py-6 lg:block">
+        <main className="hidden min-w-0 flex-1 px-8 py-6 lg:block">
           <Outlet />
         </main>
       </div>

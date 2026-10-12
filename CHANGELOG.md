@@ -6,7 +6,8 @@
 
 - 🤖(agent-skills) add impeccable frontend design skill for agents #78
 - ✨(frontend) redesign the app with a light editorial theme #78
-- ♿(frontend) make chat bubbles readable with clear message bubbles #78- ✨(frontend) redesign login nav admin and profile ux #74
+- ♿(frontend) make chat bubbles readable with clear message bubbles #78
+- ✨(frontend) use the full screen width on desktop #78- ✨(frontend) redesign login nav admin and profile ux #74
 - ✨(backend) expose avatars and display names in admin listing #74
 - ✨(backend) document accounts api in the openapi schema #72
 - ✨(frontend) fit chat bubble size to the message text #75
