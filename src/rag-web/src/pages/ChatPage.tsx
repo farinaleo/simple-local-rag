@@ -40,10 +40,14 @@ function SourcesList({ sources }: { sources: QuerySource[] }) {
 
 function MessageItem({ message }: { message: ChatMessage }) {
   return (
-    <div className="space-y-3">
-      <p className="text-right text-sm font-medium text-muted-foreground">{message.question}</p>
-      <div className="max-w-prose space-y-1">
-        <div className="text-sm leading-relaxed [&_p:first-child]:mt-0 [&_p]:mt-2 [&_p:last-child]:mb-0">
+    <div className="space-y-2.5">
+      <div className="flex justify-end">
+        <div className="w-fit max-w-[85%] rounded-lg rounded-br-sm bg-primary px-4 py-2.5 text-sm leading-relaxed font-medium text-primary-foreground">
+          {message.question}
+        </div>
+      </div>
+      <div className="max-w-prose">
+        <div className="rounded-lg rounded-bl-sm border bg-card px-4 py-3 text-sm leading-relaxed shadow-xs [&_p:first-child]:mt-0 [&_p]:mt-2 [&_p:last-child]:mb-0">
           {message.error ? (
             <p className="text-destructive">{message.answer}</p>
           ) : (
