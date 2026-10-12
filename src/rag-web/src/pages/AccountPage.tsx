@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,14 +17,10 @@ function TokenRow({ token }: { token: TokenEntry }) {
   const updateToken = useUpdateToken()
   const deleteToken = useDeleteToken()
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
-    >
+    <div className="flex items-center gap-4 rounded-lg border bg-card p-4">
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-zinc-100">{token.name}</p>
-        <p className="mt-0.5 text-xs text-zinc-400">
+        <p className="truncate font-medium text-foreground">{token.name}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
           {token.scopes.join(' · ')} · {token.status}
           {token.last_used_at &&
             ` · utilisé ${new Date(token.last_used_at).toLocaleString('fr-FR')}`}
@@ -34,7 +29,7 @@ function TokenRow({ token }: { token: TokenEntry }) {
       <Button
         variant="ghost"
         size="sm"
-        className="rounded-lg text-zinc-400 hover:bg-amber-500/15 hover:text-amber-300"
+        className="rounded-lg text-muted-foreground hover:bg-amber-600/10 hover:text-amber-700"
         onClick={() =>
           updateToken
             .mutateAsync({ id: token.id, is_active: !token.is_active })
@@ -46,7 +41,7 @@ function TokenRow({ token }: { token: TokenEntry }) {
       <Button
         variant="ghost"
         size="sm"
-        className="rounded-lg text-zinc-400 hover:bg-red-500/15 hover:text-red-400"
+        className="rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
         onClick={() => {
           if (!window.confirm(`Révoquer le token ${token.name} ?`)) return
           deleteToken.mutateAsync(token.id).catch((error) => toast.error(error.message))
@@ -54,7 +49,7 @@ function TokenRow({ token }: { token: TokenEntry }) {
       >
         Révoquer
       </Button>
-    </motion.div>
+    </div>
   )
 }
 
@@ -130,135 +125,122 @@ function AccountPage() {
 
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
-        <h2 className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
-          Mon compte
-        </h2>
-        <p className="mt-1 text-sm text-zinc-400">
+      <div>
+        <h2 className="text-xl font-semibold tracking-tight">Mon compte</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Gérez votre profil, votre mot de passe et vos tokens API.
         </p>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.08 }}
-        className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
-      >
+      <div className="rounded-lg border bg-card p-5">
         <div className="flex items-center gap-4">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt="avatar"
-              className="h-16 w-16 rounded-2xl object-cover"
-            />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xl font-bold uppercase text-white">
-              {(profile?.username ?? '?').slice(0, 2)}
-            </div>
-          )}
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-zinc-100">
+            <p className="font-semibold text-foreground">
               {profile?.display_name ?? session?.username}
             </p>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-muted-foreground">
               @{profile?.username} · {profile?.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
             </p>
           </div>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/png,image/jpeg"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) uploadAvatar(file)
-            }}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-xl"
-            onClick={() => fileInput.current?.click()}
-          >
-            Changer la photo
-          </Button>
         </div>
-        <div className="mt-4 flex gap-2">
-          <Input
-            className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-            placeholder="Nom affiché"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-          />
-          <Button
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
-            onClick={saveDisplayName}
-          >
-            Enregistrer
-          </Button>
-        </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.12 }}
-        className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
-      >
-        <h3 className="font-semibold text-zinc-100">Changer mon mot de passe</h3>
-        <div className="mt-3 space-y-2">
-          <Input
-            type="password"
-            className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-            placeholder="Mot de passe actuel"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-          />
-          <Input
-            type="password"
-            className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
-            placeholder="Nouveau mot de passe (min. 8 caractères)"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && submitPassword()}
-          />
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="rounded-lg border bg-card p-5">
+          <h3 className="font-semibold text-foreground">Édition du profil</h3>
+          <div className="mt-3 flex items-center gap-3">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="avatar"
+                className="h-12 w-12 shrink-0 rounded-lg object-cover"
+              />
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold uppercase text-primary">
+                {(profile?.username ?? '?').slice(0, 2)}
+              </div>
+            )}
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/png,image/jpeg"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) uploadAvatar(file)
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg"
+              onClick={() => fileInput.current?.click()}
+              disabled={updateProfile.isPending}
+            >
+              Changer la photo
+            </Button>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Input
+              className=""
+              placeholder="Nom affiché"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && saveDisplayName()}
+            />
+            <Button
+              className="shrink-0 rounded-lg "
+              onClick={saveDisplayName}
+              disabled={updateProfile.isPending}
+            >
+              Enregistrer
+            </Button>
+          </div>
         </div>
-        <Button
-          className="mt-3 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
-          onClick={submitPassword}
-          disabled={changePassword.isPending}
-        >
-          Mettre à jour
-        </Button>
-      </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.16 }}
-        className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
-      >
-        <h3 className="font-semibold text-zinc-100">Tokens API</h3>
-        <p className="mt-1 text-xs text-zinc-500">
+        <div className="rounded-lg border bg-card p-5">
+          <h3 className="font-semibold text-foreground">Changer mon mot de passe</h3>
+          <div className="mt-3 space-y-2">
+            <Input
+              type="password"
+              className=""
+              placeholder="Mot de passe actuel"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+            />
+            <Input
+              type="password"
+              className=""
+              placeholder="Nouveau mot de passe (min. 8)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && submitPassword()}
+            />
+            <Button
+              className="w-full rounded-lg "
+              onClick={submitPassword}
+              disabled={changePassword.isPending}
+            >
+              Mettre à jour
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-card p-5">
+        <h3 className="font-semibold text-foreground">Tokens API</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
           Donnez à un client externe un accès limité à vos données (lecture des documents + chat).
         </p>
         <div className="mt-3 flex gap-2">
           <Input
-            className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+            className=""
             placeholder="Nom du token (ex : mon-cli)"
             value={tokenName}
             onChange={(e) => setTokenName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submitToken()}
           />
-          <Button
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
-            onClick={submitToken}
-          >
+          <Button className="shrink-0 rounded-lg " onClick={submitToken}>
             + Créer
           </Button>
         </div>
@@ -267,7 +249,7 @@ function AccountPage() {
             <TokenRow key={token.id} token={token} />
           ))}
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

@@ -33,6 +33,20 @@ def test_user_gets_403_on_admin_endpoints():
     assert client.delete("/api/auth/admin/users/1/").status_code == 403
 
 
+def test_admin_listing_includes_profile_fields():
+    """The admin user listing exposes display_name and avatar_url."""
+    _user("root", role=Role.ADMIN)
+    bob = _user("bob")
+    bob.profile.display_name = "Bob Dupont"
+    bob.profile.save()
+    _login("root")
+    response = client.get("/api/auth/admin/users/")
+    assert response.status_code == 200
+    entry = next(u for u in response.json() if u["username"] == "bob")
+    assert entry["display_name"] == "Bob Dupont"
+    assert entry["avatar_url"] is None
+
+
 def test_admin_creates_user_with_temporary_password():
     """A created account gets a temp password and the must-change flag."""
     _user("root", role=Role.ADMIN)
