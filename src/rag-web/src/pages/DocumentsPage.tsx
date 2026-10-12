@@ -1,8 +1,7 @@
-import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
-
+import { FileText, Image as ImageIcon, Upload } from 'lucide-react'
 import { PageHeader, PageTransition } from '@/components/Layout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,26 +24,13 @@ const ACCEPTED_EXTENSIONS = {
   'image/png': ['.png'],
   'image/jpeg': ['.jpg', '.jpeg'],
 }
-
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 const STATUS_STYLES: Record<DocumentStatus, { label: string; className: string }> = {
-  indexed: {
-    label: 'Indexé',
-    className: 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/15',
-  },
-  processing: {
-    label: 'Traitement…',
-    className: 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/15',
-  },
-  pending: {
-    label: 'En attente',
-    className: 'bg-zinc-500/15 text-zinc-300 hover:bg-zinc-500/15',
-  },
-  failed: {
-    label: 'Échec',
-    className: 'bg-red-500/15 text-red-300 hover:bg-red-500/15',
-  },
+  indexed: { label: 'Indexé', className: 'bg-emerald-700/10 text-emerald-700' },
+  processing: { label: 'Traitement…', className: 'bg-amber-600/10 text-amber-700' },
+  pending: { label: 'En attente', className: 'bg-zinc-500/10 text-zinc-600' },
+  failed: { label: 'Échec', className: 'bg-red-600/10 text-red-700' },
 }
 
 function formatSize(bytes: number): string {
@@ -54,24 +40,18 @@ function formatSize(bytes: number): string {
 }
 
 function FileIcon({ mimeType, name }: { mimeType: string; name: string }) {
-  const extension = name.toLowerCase().endsWith('.pdf') || mimeType === 'application/pdf'
-  if (extension) {
-    return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-[10px] font-bold text-white shadow-lg shadow-rose-500/25">
-        PDF
-      </div>
-    )
-  }
-  if (mimeType.includes('word')) {
-    return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-[10px] font-bold text-white shadow-lg shadow-sky-500/25">
-        DOCX
-      </div>
-    )
-  }
+  const isPdf = name.toLowerCase().endsWith('.pdf') || mimeType === 'application/pdf'
+  const isImage = mimeType.startsWith('image/')
+  const label = isPdf ? (
+    'PDF'
+  ) : isImage ? (
+    <ImageIcon className="size-4" />
+  ) : (
+    <FileText className="size-4" />
+  )
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-sm font-bold text-white shadow-lg shadow-violet-500/25">
-      📄
+    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-[10px] font-semibold text-muted-foreground">
+      {label}
     </div>
   )
 }
@@ -81,7 +61,6 @@ export default function DocumentsPage() {
   const uploadMutation = useUploadDocument()
   const deleteMutation = useDeleteDocument()
   const [pendingDelete, setPendingDelete] = useState<DocumentItem | null>(null)
-
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       for (const file of acceptedFiles) {
@@ -97,13 +76,11 @@ export default function DocumentsPage() {
     },
     [uploadMutation],
   )
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: ACCEPTED_EXTENSIONS,
     maxSize: MAX_UPLOAD_BYTES,
   })
-
   const confirmDelete = () => {
     if (!pendingDelete) return
     const document = pendingDelete
@@ -113,103 +90,83 @@ export default function DocumentsPage() {
       onSettled: () => setPendingDelete(null),
     })
   }
-
   return (
     <PageTransition>
-      <div className="space-y-6">
+      <div className="space-y-5">
         <PageHeader
           title="Documents"
           subtitle="Gérez les fichiers indexés dans votre base RAG."
           action={
-            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+            <div className="text-xs text-muted-foreground">
               {(documents ?? []).length} fichier{((documents ?? []).length ?? 0) > 1 ? 's' : ''}
             </div>
           }
         />
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.08 }}
-          className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
-        >
+        <div {...getRootProps()}>
+          <input {...getInputProps()} />
           <div
-            {...getRootProps()}
-            className={`w-full cursor-pointer rounded-xl border border-dashed px-4 py-8 text-center text-sm transition-all ${
+            className={`flex cursor-pointer items-center justify-center gap-2.5 rounded-lg border border-dashed px-4 py-7 text-sm transition-colors ${
               isDragActive
-                ? 'border-violet-500 bg-violet-500/10 text-zinc-100'
-                : 'border-white/15 bg-zinc-900/60 text-zinc-400 hover:border-violet-500/40 hover:text-zinc-200'
+                ? 'border-primary bg-accent text-accent-foreground'
+                : 'border-input bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
             }`}
           >
-            <input {...getInputProps()} />
+            <Upload className="size-4 shrink-0" aria-hidden />
             {isDragActive
               ? 'Déposez les fichiers ici…'
-              : '📂 Glissez-déposez des fichiers ici, ou cliquez pour sélectionner — txt, md, pdf, docx, png, jpg (max 50 Mo)'}
+              : 'Glissez-déposez des fichiers, ou cliquez pour sélectionner (txt, md, pdf, docx, png, jpg — max 50 Mo)'}
           </div>
-        </motion.div>
-
+        </div>
         {isError && (
-          <p className="text-sm text-red-400">
-            Impossible de charger les documents — l'API est-elle lancée ?
+          <p className="text-sm text-destructive">
+            Impossible de charger les documents — l&apos;API est-elle lancée ?
           </p>
         )}
         {isLoading ? (
-          <p className="text-sm text-zinc-400">Chargement des documents…</p>
+          <p className="text-sm text-muted-foreground">Chargement des documents…</p>
         ) : (
           <div className="space-y-2">
-            <AnimatePresence initial={false}>
-              {(documents ?? []).map((document, i) => (
-                <motion.div
-                  key={document.id}
-                  layout
-                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: 24, scale: 0.96 }}
-                  transition={{ duration: 0.25, delay: i * 0.03 }}
-                  className="group flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4 backdrop-blur transition-all hover:border-violet-500/40 hover:bg-white/[0.08]"
+            {(documents ?? []).map((document) => (
+              <div
+                key={document.id}
+                className="group flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-card p-3 transition-colors hover:border-primary/40"
+              >
+                <FileIcon mimeType={document.mime_type} name={document.original_filename} />
+                <div className="min-w-0 flex-1 basis-40">
+                  <p className="truncate text-sm font-medium">{document.original_filename}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {formatSize(document.size_bytes)} ·{' '}
+                    {new Date(document.created_at).toLocaleDateString('fr-FR')}
+                  </p>
+                </div>
+                <Badge
+                  variant="secondary"
+                  className={`hidden rounded-full sm:inline-flex ${STATUS_STYLES[document.status].className}`}
                 >
-                  <FileIcon mimeType={document.mime_type} name={document.original_filename} />
-                  <div className="min-w-0 flex-1 basis-40">
-                    <p className="truncate font-medium text-zinc-100">
-                      {document.original_filename}
-                    </p>
-                    <p className="mt-0.5 text-xs text-zinc-400">
-                      {formatSize(document.size_bytes)} ·{' '}
-                      {new Date(document.created_at).toLocaleDateString('fr-FR')}
-                    </p>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className={`hidden rounded-full sm:inline-flex ${STATUS_STYLES[document.status].className}`}
-                  >
-                    {document.status === 'processing' && (
-                      <span className="mr-1 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
-                    )}
-                    {STATUS_STYLES[document.status].label}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-lg text-zinc-400 transition-all hover:bg-red-500/15 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
-                    onClick={() => setPendingDelete(document)}
-                  >
-                    Supprimer
-                  </Button>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                  {document.status === 'processing' && (
+                    <span className="mr-1 size-1.5 animate-pulse rounded-full bg-amber-600" />
+                  )}
+                  {STATUS_STYLES[document.status].label}
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+                  onClick={() => setPendingDelete(document)}
+                >
+                  Supprimer
+                </Button>
+              </div>
+            ))}
             {(documents ?? []).length === 0 && (
-              <div className="rounded-2xl border border-dashed border-white/15 p-12 text-center">
-                <p className="text-4xl">📄</p>
-                <p className="mt-3 text-sm text-zinc-400">
-                  Aucun document. Ajoutez un fichier pour l'indexer.
+              <div className="rounded-lg border border-dashed p-10 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Aucun document. Ajoutez un fichier pour l&apos;indexer.
                 </p>
               </div>
             )}
           </div>
         )}
-
         <Dialog
           open={pendingDelete !== null}
           onOpenChange={(open) => !open && setPendingDelete(null)}
@@ -226,10 +183,7 @@ export default function DocumentsPage() {
               <Button variant="outline" onClick={() => setPendingDelete(null)}>
                 Annuler
               </Button>
-              <Button
-                className="bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-500 hover:to-rose-500"
-                onClick={confirmDelete}
-              >
+              <Button variant="destructive" onClick={confirmDelete}>
                 Supprimer
               </Button>
             </DialogFooter>

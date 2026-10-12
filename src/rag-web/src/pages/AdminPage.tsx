@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,7 +22,7 @@ function UserAvatar({ user, size = 'md' }: { user: AdminUser; size?: 'md' | 'lg'
   }
   return (
     <div
-      className={`${dimension} flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-xs font-bold uppercase text-white`}
+      className={`${dimension} flex shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold uppercase text-primary`}
     >
       {user.username.slice(0, 2)}
     </div>
@@ -111,115 +110,85 @@ function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
-        <h2 className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
-          Administration
-        </h2>
-        <p className="mt-1 text-sm text-zinc-400">Gérez les comptes utilisateurs de votre RAG.</p>
-      </motion.div>
+      <div>
+        <h2 className="text-xl font-semibold tracking-tight">Administration</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Gérez les comptes utilisateurs de votre RAG.
+        </p>
+      </div>
 
       {session?.must_change_password && !showOwnPassword && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4"
-        >
-          <p className="text-sm text-amber-200">
+        <div className="rounded-lg border border-amber-600/30 bg-amber-600/10 p-4">
+          <p className="text-sm text-amber-800">
             Votre mot de passe est temporaire. Changez-le maintenant.
           </p>
           <Button size="sm" className="mt-2" onClick={() => setShowOwnPassword(true)}>
             Changer mon mot de passe
           </Button>
-        </motion.div>
+        </div>
       )}
 
       {showOwnPassword && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
-        >
+        <div className="rounded-lg border bg-card p-4">
           <div className="flex gap-2">
             <Input
               type="password"
-              className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+              className=""
               placeholder="Nouveau mot de passe (min. 8)"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
-            <Button
-              className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
-              onClick={submitOwnPassword}
-            >
+            <Button className="rounded-lg " onClick={submitOwnPassword}>
               Valider
             </Button>
           </div>
-        </motion.div>
+        </div>
       )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.08 }}
-        className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"
-      >
+      <div className="rounded-lg border bg-card p-4">
         <div className="flex flex-col gap-2 sm:flex-row">
           <Input
-            className="rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+            className=""
             placeholder="Nom du compte à créer"
             value={newUsername}
             onChange={(e) => setNewUsername(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submitNewUser()}
           />
-          <Button
-            className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600"
-            onClick={submitNewUser}
-            disabled={createUser.isPending}
-          >
+          <Button className="rounded-lg " onClick={submitNewUser} disabled={createUser.isPending}>
             + Créer
           </Button>
         </div>
-        <p className="mt-2 text-xs text-zinc-500">
+        <p className="mt-2 text-xs text-muted-foreground">
           Le mot de passe temporaire s'affiche une seule fois ; l'utilisateur le changera à sa
           première connexion.
         </p>
-      </motion.div>
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Input
           type="search"
           autoComplete="off"
           spellCheck={false}
-          className="w-full max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+          className="w-full max-w-xs "
           placeholder="Rechercher un compte…"
           value={userSearch}
           onChange={(e) => setUserSearch(e.target.value)}
         />
         {userSearch && (
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-muted-foreground">
             {filteredUsers.length} résultat{filteredUsers.length > 1 ? 's' : ''}
           </span>
         )}
       </div>
 
       <div className="space-y-2">
-        {isLoading && <p className="text-sm text-zinc-500">Chargement…</p>}
-        {filteredUsers.map((user, i) => (
-          <motion.div
-            key={user.id}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: i * 0.03 }}
-            className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur transition-all hover:border-violet-500/40"
-          >
+        {isLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}
+        {filteredUsers.map((user) => (
+          <div className="group flex items-center gap-4 rounded-lg border bg-card p-4 transition-all hover:border-primary/40">
             <UserAvatar user={user} />
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-zinc-100">{user.display_name}</p>
-              <p className="mt-0.5 text-xs text-zinc-400">
+              <p className="truncate font-medium text-foreground">{user.display_name}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 @{user.username} · {user.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
                 {!user.is_active && ' · bloqué'}
                 {user.must_change_password && ' · mot de passe temporaire'}
@@ -230,7 +199,7 @@ function AdminPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="rounded-lg text-zinc-400 hover:bg-white/10 hover:text-zinc-100"
+                  className="rounded-lg text-muted-foreground hover:bg-muted"
                   onClick={() =>
                     updateUser
                       .mutateAsync({ id: user.id, reset_password: true })
@@ -247,7 +216,7 @@ function AdminPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="rounded-lg text-zinc-400 hover:bg-amber-500/15 hover:text-amber-300"
+                  className="rounded-lg text-muted-foreground hover:bg-amber-600/10 hover:text-amber-700"
                   onClick={() =>
                     updateUser
                       .mutateAsync({ id: user.id, is_active: !user.is_active })
@@ -259,7 +228,7 @@ function AdminPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="rounded-lg text-zinc-400 hover:bg-red-500/15 hover:text-red-400"
+                  className="rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => {
                     if (!window.confirm(`Supprimer le compte ${user.username} ?`)) return
                     deleteUser.mutateAsync(user.id).catch((error) => toast.error(error.message))
@@ -269,17 +238,12 @@ function AdminPage() {
                 </Button>
               </>
             )}
-          </motion.div>
+          </div>
         ))}
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.12 }}
-        className="mt-10"
-      >
-        <h3 className="px-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+      <div className="mt-10">
+        <h3 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Tokens API de tous les utilisateurs
         </h3>
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -287,41 +251,35 @@ function AdminPage() {
             type="search"
             autoComplete="off"
             spellCheck={false}
-            className="w-full max-w-xs rounded-xl border-white/10 bg-zinc-900/60 text-zinc-100"
+            className="w-full max-w-xs "
             placeholder="Rechercher par token ou utilisateur…"
             value={tokenSearch}
             onChange={(e) => setTokenSearch(e.target.value)}
           />
           <Button
             variant="outline"
-            className="rounded-xl"
+            className="rounded-lg"
             onClick={() => setTokenSort((sort) => (sort === 'status' ? 'user' : 'status'))}
           >
             Tri : {tokenSort === 'status' ? 'statut' : 'créateur'}
           </Button>
         </div>
-      </motion.div>
+      </div>
       <div className="mt-2 space-y-2">
-        {tokensLoading && <p className="text-sm text-zinc-500">Chargement…</p>}
+        {tokensLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}
         {!tokensLoading && filteredTokens.length === 0 && (
-          <p className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-sm text-zinc-500">
+          <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
             Aucun token API ne correspond.
           </p>
         )}
         {filteredTokens.map((token) => (
-          <motion.div
-            key={token.id}
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur transition-all hover:border-violet-500/40"
-          >
+          <div className="group flex items-center gap-4 rounded-lg border bg-card p-4 transition-all hover:border-primary/40">
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-zinc-100">
+              <p className="truncate font-medium text-foreground">
                 {token.name}{' '}
-                <span className="text-xs font-normal text-zinc-500">— {token.user}</span>
+                <span className="text-xs font-normal text-muted-foreground">— {token.user}</span>
               </p>
-              <p className="mt-0.5 text-xs text-zinc-400">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 {token.scopes.join(', ')} · {token.status}
                 {token.last_used_at && ` · dernière utilisation : ${token.last_used_at}`}
               </p>
@@ -329,7 +287,7 @@ function AdminPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-lg text-zinc-400 hover:bg-amber-500/15 hover:text-amber-300"
+              className="rounded-lg text-muted-foreground hover:bg-amber-600/10 hover:text-amber-700"
               onClick={() =>
                 updateToken
                   .mutateAsync({ id: token.id, is_active: !token.is_active })
@@ -341,7 +299,7 @@ function AdminPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-lg text-zinc-400 hover:bg-red-500/15 hover:text-red-400"
+              className="rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               onClick={() => {
                 if (!window.confirm(`Révoquer le token ${token.name} de ${token.user} ?`)) return
                 deleteToken.mutateAsync(token.id).catch((error) => toast.error(error.message))
@@ -349,7 +307,7 @@ function AdminPage() {
             >
               Révoquer
             </Button>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
